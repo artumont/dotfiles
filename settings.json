@@ -1,0 +1,14 @@
+{
+  "symlinks" : [
+    {
+      "name": "Neovim",
+      "dest": "~/.config/nvim/",
+      "source": "./nvim"
+    },
+    {
+      "name": "Neovide",
+      "dest": "~/.config/neovide/",
+      "source": "./neovide"
+    }
+  ]
+}
