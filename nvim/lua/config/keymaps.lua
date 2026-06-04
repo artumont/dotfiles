@@ -50,18 +50,10 @@ map("n", "<C-.>", "<cmd>bnext<CR>", { silent = true, desc = "Next Buffer" })
 
 map("n", "<C-,>", "<cmd>bprevious<CR>", { silent = true, desc = "Next Buffer" })
 
-map(
-  "n",
-  "<leader>t1",
-  ":1ToggleTerm direction=vertical<CR>",
-  { noremap = true, silent = true, desc = "Toggle Terminal 1" }
-)
-map(
-  "n",
-  "<leader>t2",
-  ":2ToggleTerm direction=vertical<CR>",
-  { noremap = true, silent = true, desc = "Toggle Terminal 2" }
-)
+map("n", "<leader>ts", function()
+  local count = #require("toggleterm.terminal").get_all() + 1
+  require("toggleterm").toggle(count, nil, nil, "vertical")
+end, { noremap = true, silent = true, desc = "Split terminal panel" })
 
 del("n", "<C-Up>")
 del("n", "<C-Down>")
