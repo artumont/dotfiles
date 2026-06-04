@@ -41,7 +41,7 @@ def create_symlinks(config: dict) -> None:
             raise RuntimeError(
                 f"Source not present within the symlink config of {name}"
             )
-        
+
         source_path = Path(os.path.expanduser(raw_source)).resolve()
         if not source_path.exists():
             raise RuntimeError(f"Source path {source_path} does not exist for {name}")
@@ -51,16 +51,20 @@ def create_symlinks(config: dict) -> None:
             raise RuntimeError(
                 f"Destination not present within the symlink config of {name}"
             )
-        
-        clean_dest = raw_dest.rstrip('/')
+
+        clean_dest = raw_dest.rstrip("/")
         dest_path = Path(os.path.expanduser(clean_dest))
-        
+
         if dest_path.exists() or dest_path.is_symlink():
             if dest_path.is_symlink():
-                print(f"Destination path {dest_path} already exists as a symlink for {name}, removing it...")
+                print(
+                    f"Destination path {dest_path} already exists as a symlink for {name}, removing it..."
+                )
                 dest_path.unlink()
             else:
-                print(f"Destination path {dest_path} already exists for {name}, creating backup and removing...")
+                print(
+                    f"Destination path {dest_path} already exists for {name}, creating backup and removing..."
+                )
                 create_backup(dest_path)
                 shutil.rmtree(dest_path) if dest_path.is_dir() else dest_path.unlink()
 
