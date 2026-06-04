@@ -43,5 +43,9 @@ map("t", "<Esc>", "<C-\\><C-n>", { desc = "Exit Terminal Mode" })
 
 map("v", "<C-x>", "+d", { desc = "Cut to System Clipboard" })
 
+map("n", "<C-.>", "<cmd>bnext<CR>", { silent = true, desc = "Next Buffer" })
+
+map("n", "<C-,>", "<cmd>bprevious<CR>", { silent = true, desc = "Next Buffer" })
+
 del("n", "<C-Up>")
 del("n", "<C-Down>")
