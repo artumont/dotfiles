@@ -1,15 +1,3 @@
--- Dynamically append local binary paths so GUI wrappers like Neovide can see them
-local local_bin = vim.fn.expand "$HOME/.local/bin"
-if vim.fn.isdirectory(local_bin) == 1 and not string.find(vim.env.PATH, local_bin, 1, true) then
-  vim.env.PATH = local_bin .. ":" .. vim.env.PATH
-end
-
--- Dynamically inject OpenCode's binary path for GUI clients like Neovide
-local opencode_bin = vim.fn.expand "$HOME/.opencode/bin"
-if vim.fn.isdirectory(opencode_bin) == 1 and not string.find(vim.env.PATH, opencode_bin, 1, true) then
-  vim.env.PATH = opencode_bin .. ":" .. vim.env.PATH
-end
-
 -- This file simply bootstraps the installation of Lazy.nvim and then calls other files for execution
 -- This file doesn't necessarily need to be touched, BE CAUTIOUS editing this file and proceed at your own risk.
 local lazypath = vim.env.LAZY or vim.fn.stdpath "data" .. "/lazy/lazy.nvim"
