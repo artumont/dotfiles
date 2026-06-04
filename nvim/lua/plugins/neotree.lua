@@ -29,6 +29,7 @@ return {
             "thumbs.db",
             "node_modules",
             "__pycache__",
+            ".git",
           },
         },
       },
