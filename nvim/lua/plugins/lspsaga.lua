@@ -25,9 +25,9 @@ return {
       require("lspsaga").setup(opts)
 
       local map = vim.keymap.set
-      map("n", "K", "<cmd>Lspsaga hover_doc<CR>", { silent = true, desc = "Hover Doc" })
-      map("n", "gl", "<cmd>Lspsaga show_line_diagnostics<CR>", { silent = true, desc = "Line Diagnostics" })
+      map("n", "K", "<cmd>Lspsaga hover_doc<CR>", { silent = true })
+      map("n", "gl", "<cmd>Lspsaga show_line_diagnostics<CR>", { silent = true })
+      map("n", "fd", "<cmd>Lspsaga hover_doc<CR>", { desc = "Sleek Hover Documentation" })
     end,
   },
 }
-
