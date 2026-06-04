@@ -50,5 +50,18 @@ map("n", "<C-.>", "<cmd>bnext<CR>", { silent = true, desc = "Next Buffer" })
 
 map("n", "<C-,>", "<cmd>bprevious<CR>", { silent = true, desc = "Next Buffer" })
 
+map(
+  "n",
+  "<leader>t1",
+  ":1ToggleTerm direction=vertical<CR>",
+  { noremap = true, silent = true, desc = "Toggle Terminal 1" }
+)
+map(
+  "n",
+  "<leader>t2",
+  ":2ToggleTerm direction=vertical<CR>",
+  { noremap = true, silent = true, desc = "Toggle Terminal 2" }
+)
+
 del("n", "<C-Up>")
 del("n", "<C-Down>")
