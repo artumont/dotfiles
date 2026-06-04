@@ -1,8 +1,8 @@
-import os
 import json
+import os
 import shutil
-from pathlib import Path
 import subprocess
+from pathlib import Path
 
 
 def load_settings() -> dict:
