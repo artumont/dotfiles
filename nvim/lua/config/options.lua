@@ -1,7 +1,23 @@
+---@return number width
+---@return number height
+local function getScreenResolution()
+  local raw_res = vim.fn.system "xrandr | grep -w 'connected primary' | awk '{print $4}'"
+
+  local width, height = raw_res:match "(%d+)x(%d+)"
+
+  return width, height
+end
+
 vim.opt.relativenumber = false
 vim.opt.number = true
 
-vim.g.neovide_scale_factor = 0.9
+local width, height = getScreenResolution()
+
+if tonumber(width) == 2560 and tonumber(height) == 1440 then
+  vim.g.neovide_scale_factor = 0.9
+else
+  vim.g.neovide_scale_factor = 0.8
+end
 
 vim.opt.keymodel = "startsel,stopsel"
 
