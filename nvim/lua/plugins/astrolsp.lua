@@ -33,27 +33,28 @@ return {
         },
       },
     },
-    diagnostics = {
-      underline = true,
-      update_in_insert = true,
-      virtual_text = false,
-      severity_sort = true,
-    },
-    autocmds = {
-      diagnostic_popup = {
-        cond = true,
-        {
-          event = { "CursorHold" },
-          desc = "Show diagnostics in a floating window safely",
-          callback = function()
-            for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
-              local config = vim.api.nvim_win_get_config(win)
-              if config.relative ~= "" then return end
-            end
-            vim.diagnostic.open_float(nil, { focus = false, scope = "cursor" })
-          end,
-        },
-      },
-    },
+    -- diagnostics = {
+    --   underline = true,
+    --   update_in_insert = true,
+    --   virtual_text = false,
+    --   severity_sort = true,
+    -- },
+    -- autocmds = {
+    --   diagnostic_popup = {
+    --     cond = true,
+    --     {
+    --       event = { "CursorHold" },
+    --       desc = "Show diagnostics in a floating window safely",
+    --       callback = function()
+    --         for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+    --           local config = vim.api.nvim_win_get_config(win)
+    --           if config.relative ~= "" then return end
+    --         end
+    --         vim.diagnostic.open_float(nil, { focus = false, scope = "cursor" })
+    --       end,
+    --     },
+    --   },
+    -- },
   },
 }
+

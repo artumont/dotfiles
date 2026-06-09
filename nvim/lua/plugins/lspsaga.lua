@@ -11,6 +11,13 @@ return {
         border = "rounded",
         devicon = true,
       },
+      rename = {
+        in_select = true,
+        auto_save = true,
+        keys = {
+          quit = "<Esc>",
+        },
+      },
       hover = {
         open_link = "gx",
         max_width = 0.6,
@@ -34,9 +41,8 @@ return {
       require("lspsaga").setup(opts)
 
       local map = vim.keymap.set
-      -- K and fd both open hover_doc — consolidate to just K (standard LSP convention)
-      map("n", "K", "<cmd>Lspsaga hover_doc<CR>", { silent = true, desc = "Hover documentation" })
-      map("n", "gl", "<cmd>Lspsaga show_line_diagnostics<CR>", { silent = true, desc = "Show line diagnostics" })
+      map("n", "fd", "<cmd>Lspsaga hover_doc<CR>", { silent = true, desc = "Hover documentation" })
+      map("n", "gr", "<cmd>Lspsaga rename<CR>", { silent = true, desc = "Rename symbol" })
       map("n", "ga", "<cmd>Lspsaga code_action<CR>", { silent = true, desc = "Code actions" })
     end,
   },
