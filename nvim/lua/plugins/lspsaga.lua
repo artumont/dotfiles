@@ -34,10 +34,10 @@ return {
       require("lspsaga").setup(opts)
 
       local map = vim.keymap.set
-      map("n", "K", "<cmd>Lspsaga hover_doc<CR>", { silent = true })
-      map("n", "gl", "<cmd>Lspsaga show_line_diagnostics<CR>", { silent = true })
-      map("n", "fd", "<cmd>Lspsaga hover_doc<CR>", { desc = "Sleek Hover Documentation" })
-      map("n", "ga", "<cmd>Lspsaga code_action<CR>", { desc = "Sleek Code Actions" })
+      -- K and fd both open hover_doc — consolidate to just K (standard LSP convention)
+      map("n", "K", "<cmd>Lspsaga hover_doc<CR>", { silent = true, desc = "Hover documentation" })
+      map("n", "gl", "<cmd>Lspsaga show_line_diagnostics<CR>", { silent = true, desc = "Show line diagnostics" })
+      map("n", "ga", "<cmd>Lspsaga code_action<CR>", { silent = true, desc = "Code actions" })
     end,
   },
 }

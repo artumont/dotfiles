@@ -1,7 +1,7 @@
 vim.api.nvim_create_user_command("WorkspaceOpen", function()
   -- search recursively from cwd, max depth 5 to avoid huge trees
   local results = vim.fn.systemlist("fd --type f --extension code-workspace --max-depth 5 . " .. vim.fn.getcwd())
-  
+
   if vim.v.shell_error ~= 0 or #results == 0 then
     -- fallback to find if fd isn't available
     results = vim.fn.systemlist("find " .. vim.fn.getcwd() .. " -maxdepth 5 -name '*.code-workspace' 2>/dev/null")
@@ -19,7 +19,7 @@ vim.api.nvim_create_user_command("WorkspaceOpen", function()
       return
     end
 
-    local content = file:read("*a")
+    local content = file:read "*a"
     file:close()
 
     local ok, workspace = pcall(vim.fn.json_decode, content)
@@ -46,30 +46,30 @@ vim.api.nvim_create_user_command("WorkspaceOpen", function()
       return
     end
 
-    local pickers = require("telescope.pickers")
-    local finders = require("telescope.finders")
+    local pickers = require "telescope.pickers"
+    local finders = require "telescope.finders"
     local conf = require("telescope.config").values
-    local actions = require("telescope.actions")
-    local action_state = require("telescope.actions.state")
-    local entry_display = require("telescope.pickers.entry_display")
+    local actions = require "telescope.actions"
+    local action_state = require "telescope.actions.state"
+    local entry_display = require "telescope.pickers.entry_display"
 
-    local displayer = entry_display.create({
+    local displayer = entry_display.create {
       separator = " ",
       items = {
         { width = 20 },
         { remaining = true },
       },
-    })
+    }
 
     local function open_tabs(selected)
       local function open_next(i)
         if i > #selected then
-          vim.cmd("tablast")
+          vim.cmd "tablast"
           return
         end
 
         local entry = selected[i]
-        vim.cmd("tabnew")
+        vim.cmd "tabnew"
         vim.cmd("tcd " .. vim.fn.fnameescape(entry.root))
 
         local buf = vim.api.nvim_create_buf(false, true)
@@ -82,80 +82,94 @@ vim.api.nvim_create_user_command("WorkspaceOpen", function()
         vim.cmd "Neotree filesystem show left"
         vim.cmd "Neotree git_status show right"
 
-        vim.defer_fn(function()
-          open_next(i + 1)
-        end, 150)
+        vim.defer_fn(function() open_next(i + 1) end, 150)
       end
 
       open_next(1)
     end
 
-    pickers.new({}, {
-      prompt_title = "Select Folders — " .. vim.fn.fnamemodify(workspace_file, ":t"),
-      finder = finders.new_table({
-        results = entries,
-        entry_maker = function(entry)
-          return {
-            value = entry,
-            display = function()
-              return displayer({
-                { entry.label, "TelescopeResultsIdentifier" },
-                { entry.root,  "TelescopeResultsComment" },
-              })
-            end,
-            ordinal = entry.label,
-          }
+    pickers
+      .new({}, {
+        prompt_title = "Select Folders — " .. vim.fn.fnamemodify(workspace_file, ":t"),
+        finder = finders.new_table {
+          results = entries,
+          entry_maker = function(entry)
+            return {
+              value = entry,
+              display = function()
+                return displayer {
+                  { entry.label, "TelescopeResultsIdentifier" },
+                  { entry.root, "TelescopeResultsComment" },
+                }
+              end,
+              ordinal = entry.label,
+            }
+          end,
+        },
+        sorter = conf.generic_sorter {},
+        attach_mappings = function(prompt_bufnr, _)
+          actions.select_default:replace(function()
+            local picker = action_state.get_current_picker(prompt_bufnr)
+            local selected = picker:get_multi_selection()
+            if #selected == 0 then selected = { action_state.get_selected_entry() } end
+            actions.close(prompt_bufnr)
+            open_tabs(vim.tbl_map(function(e) return e.value end, selected))
+          end)
+          return true
         end,
-      }),
-      sorter = conf.generic_sorter({}),
-      attach_mappings = function(prompt_bufnr, _)
-        actions.select_default:replace(function()
-          local picker = action_state.get_current_picker(prompt_bufnr)
-          local selected = picker:get_multi_selection()
-          if #selected == 0 then
-            selected = { action_state.get_selected_entry() }
-          end
-          actions.close(prompt_bufnr)
-          open_tabs(vim.tbl_map(function(e) return e.value end, selected))
-        end)
-        return true
-      end,
-    }):find()
+      })
+      :find()
   end
 
   -- if multiple workspace files found, pick one first
   if #results == 1 then
     load_workspace(results[1])
   else
-    local pickers = require("telescope.pickers")
-    local finders = require("telescope.finders")
+    local pickers = require "telescope.pickers"
+    local finders = require "telescope.finders"
     local conf = require("telescope.config").values
-    local actions = require("telescope.actions")
-    local action_state = require("telescope.actions.state")
+    local actions = require "telescope.actions"
+    local action_state = require "telescope.actions.state"
 
-    pickers.new({}, {
-      prompt_title = "Select Workspace File",
-      finder = finders.new_table({
-        results = results,
-        entry_maker = function(entry)
-          return {
-            value = entry,
-            display = vim.fn.fnamemodify(entry, ":~:."), -- show relative path
-            ordinal = entry,
-          }
+    pickers
+      .new({}, {
+        prompt_title = "Select Workspace File",
+        finder = finders.new_table {
+          results = results,
+          entry_maker = function(entry)
+            return {
+              value = entry,
+              display = vim.fn.fnamemodify(entry, ":~:."), -- show relative path
+              ordinal = entry,
+            }
+          end,
+        },
+        sorter = conf.generic_sorter {},
+        attach_mappings = function(prompt_bufnr, _)
+          actions.select_default:replace(function()
+            local selection = action_state.get_selected_entry()
+            actions.close(prompt_bufnr)
+            if selection then load_workspace(selection.value) end
+          end)
+          return true
         end,
-      }),
-      sorter = conf.generic_sorter({}),
-      attach_mappings = function(prompt_bufnr, _)
-        actions.select_default:replace(function()
-          local selection = action_state.get_selected_entry()
-          actions.close(prompt_bufnr)
-          if selection then
-            load_workspace(selection.value)
-          end
-        end)
-        return true
-      end,
-    }):find()
+      })
+      :find()
   end
 end, {})
+
+vim.api.nvim_create_user_command("CreateBranch", function()
+  vim.ui.input({ prompt = "New branch name: " }, function(name)
+    if not name or name == "" then return end
+    name = name:gsub("%s+", "-")
+
+    local out = vim.fn.system("git checkout -b " .. vim.fn.shellescape(name) .. " 2>&1")
+
+    if vim.v.shell_error ~= 0 then
+      vim.notify("GitBranch failed:\n" .. out, vim.log.levels.ERROR)
+    else
+      vim.notify("Created branch: " .. name, vim.log.levels.INFO)
+      vim.cmd "Neotree git_status"
+    end
+  end)
+end, { desc = "Create a new git branch from current" })

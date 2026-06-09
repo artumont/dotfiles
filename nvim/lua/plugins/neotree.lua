@@ -8,11 +8,23 @@ return {
     },
     opts = {
       window = {
-        -- position = "left",
-        -- width = 30,
         mappings = {
           ["<bs>"] = "noop",
           ["<space>"] = "noop",
+        },
+      },
+      git_status = {
+        window = {
+          mappings = {
+            ["gbs"] = {
+              function(_) require("telescope.builtin").git_branches() end,
+              desc = "switch_git_branch",
+            },
+            ["gbn"] = {
+              function() vim.cmd "GitBranch" end,
+              desc = "create_git_branch",
+            },
+          },
         },
       },
       event_handlers = {},
@@ -35,10 +47,6 @@ return {
       },
       source_selector = {
         winbar = false,
-        -- sources = {
-        --   { source = "filesystem" },
-        --   { source = "git_status" },
-        -- },
       },
     },
   },

@@ -1,5 +1,3 @@
-local edgy = require "edgy"
-
 vim.api.nvim_create_autocmd("StdinReadPre", {
   callback = function() vim.g.using_stdin = true end,
 })
@@ -16,6 +14,5 @@ vim.api.nvim_create_autocmd("VimEnter", {
       require("edgy").open()
       vim.cmd "Neotree filesystem"
     end, 100)
-    edgy.open()
   end,
 })
