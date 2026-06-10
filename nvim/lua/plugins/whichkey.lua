@@ -5,6 +5,7 @@ return {
     spec = {
       { "<leader>E", icon = "󰙅" },
       { "<leader>b", icon = "", desc = "Buffer Actions" },
+      { "<leader>l", icon = "󰈮", desc = "Lsp Actions" },
     },
   },
 }

@@ -6,7 +6,7 @@ map("n", "<leader>E", "<cmd>Neotree toggle<CR>", { desc = "Toggle File Explorer"
 map("n", "<leader>G", "<cmd>Neotree git_status toggle<CR>", { desc = "Toggle Git Explorer" })
 map("n", "<leader>C", "<cmd>ToggleTerm<CR>", { desc = "Toggle Terminal Panel" })
 
--- File saving
+-- File Saving
 map("n", "<leader>w", "<cmd>w<CR>", { desc = "Save File" })
 
 -- Avoid copy on delete
@@ -19,10 +19,18 @@ map({ "n", "v" }, "C", '"_C', { noremap = true })
 map({ "n", "v" }, "y", '"+y', { noremap = true })
 map("n", "Y", '"+Y', { noremap = true })
 
--- Indentation management
+-- Indentation Management
 map("v", "<Tab>", ">gv", { noremap = true, silent = true, desc = "Indent selection" })
 map("v", "<S-Tab>", "<gv", { noremap = true, silent = true, desc = "Dedent selection" })
 
 -- Buffer Navigation
 map("n", "<leader>bp", "<cmd>BufferLinePick<CR>", { desc = "Buffer Pick" })
 map("n", "<leader>bd", "<cmd>b# | bd#<CR>", { desc = "Delete Current Buffer" })
+
+-- Terminal Management
+map("t", "<Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
+
+-- Lsp Actions
+map("n", "<leader>la", "<cmd>Lspsaga code_action<CR>", { desc = "Open Code Actions" })
+map("n", "<leader>ld", "<cmd>Lspsaga hover_doc<CR>", { desc = "Open Documentation" })
+map("n", "<leader>lr", "<cmd>Lspsaga rename<CR>", { desc = "Rename Symbol" })

@@ -1,7 +1,9 @@
 return {
   {
     "williamboman/mason.nvim",
-    opts = {},
+    opts = {
+      ensure_installed = { "lua_ls" },
+    },
   },
   {
     "williamboman/mason-lspconfig.nvim",
