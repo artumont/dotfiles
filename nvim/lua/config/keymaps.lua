@@ -20,3 +20,4 @@ map("v", "<S-Tab>", "<gv", { noremap = true, silent = true, desc = "Dedent selec
 
 -- Buffer Navigation
 map('n', '<leader>bp', '<cmd>BufferLinePick<CR>', { desc = 'Buffer Pick' })
+map("n", "<leader>bd", "<cmd>b# | bd#<CR>", { desc = "Delete Current Buffer" })
