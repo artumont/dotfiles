@@ -8,12 +8,22 @@ return {
       vim.opt.splitkeep = "screen"
     end,
     opts = {
+      wo = {
+        winbar = true,
+      },
+      exit_when_last = false,
       animate = { enabled = false },
       bottom = {
         {
           ft = "toggleterm",
           size = { height = 0.2 },
           filter = function(_, win) return vim.api.nvim_win_get_config(win).relative == "" end,
+        },
+        {
+          title = "Trouble",
+          ft = "trouble",
+          filter = function(_, win) return vim.api.nvim_win_get_config(win).relative == "" end,
+          size = { height = 0.2 },
         },
       },
       left = {
@@ -38,5 +48,9 @@ return {
         },
       },
     },
+    filter = function(buf, win)
+      local ft = vim.bo[buf].filetype
+      return ft ~= "DiffviewFiles" and ft ~= "DiffviewFile" and ft ~= "DiffviewFileHistory"
+    end,
   },
 }

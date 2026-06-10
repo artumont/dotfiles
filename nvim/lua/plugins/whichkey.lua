@@ -6,6 +6,8 @@ return {
       { "<leader>E", icon = "󰙅" },
       { "<leader>b", icon = "", desc = "Buffer Actions" },
       { "<leader>l", icon = "󰈮", desc = "Lsp Actions" },
+      { "<leader>x", icon = "", desc = "Trouble Actions" },
+      { "<leader>g", icon = "", desc = "Git Actions" },
     },
   },
 }

@@ -4,7 +4,8 @@ local del = vim.keymap.del
 -- UI Toggles
 map("n", "<leader>E", "<cmd>Neotree toggle<CR>", { desc = "Toggle File Explorer" })
 map("n", "<leader>G", "<cmd>Neotree git_status toggle<CR>", { desc = "Toggle Git Explorer" })
-map("n", "<leader>C", "<cmd>ToggleTerm<CR>", { desc = "Toggle Terminal Panel" })
+map("n", "<leader>X", "<cmd>Trouble diagnostics toggle filter.buf=0<cr>", { desc = "Toggle Buffer Diagnostics" })
+map("n", "<leader>T", "<cmd>ToggleTerm<CR>", { desc = "Toggle Terminal Panel" })
 
 -- File Saving
 map("n", "<leader>w", "<cmd>w<CR>", { desc = "Save File" })
@@ -39,3 +40,11 @@ map("n", "<leader>lr", "<cmd>Lspsaga rename<CR>", { desc = "Rename Symbol" })
 map("x", '"', '<Plug>(operator-sandwich-add)"', { silent = true })
 map("x", "(", "<Plug>(operator-sandwich-add)(", { silent = true })
 map("x", ")", "<Plug>(operator-sandwich-add))", { silent = true })
+
+-- Trouble Mappings
+map("n", "<leader>xX", "<cmd>Trouble diagnostics toggle<cr>", { desc = "Toggle Global Diagnostics" })
+map("n", "<leader>xL", "<cmd>Trouble loclist toggle<cr>", { desc = "Location List (Trouble)" })
+map("n", "<leader>xQ", "<cmd>Trouble qflist toggle<cr>", { desc = "Quickfix List (Trouble)" })
+
+-- Git Mappings
+map("n", "<leader>gd", function() require("mini.diff").toggle_overlay(0) end, { desc = "Toggle Git Diff" })
