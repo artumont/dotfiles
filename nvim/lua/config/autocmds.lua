@@ -1,7 +1,3 @@
-vim.api.nvim_create_autocmd("StdinReadPre", {
-  callback = function() vim.g.using_stdin = true end,
-})
-
 vim.api.nvim_create_autocmd("VimEnter", {
   nested = true,
   callback = function()
@@ -13,6 +9,7 @@ vim.api.nvim_create_autocmd("VimEnter", {
     vim.defer_fn(function()
       require("edgy").open()
       vim.cmd "Neotree filesystem"
+      vim.cmd "Neotree git_status show right"
     end, 100)
   end,
 })

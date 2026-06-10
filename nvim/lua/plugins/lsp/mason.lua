@@ -1,6 +1,6 @@
 return {
   {
-    "AstroNvim/astrocore",
+    "williamboman/mason.nvim",
     opts = {},
   },
 }

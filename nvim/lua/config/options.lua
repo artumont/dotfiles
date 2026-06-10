@@ -8,17 +8,21 @@ local function getScreenResolution()
   return width, height
 end
 
+vim.opt.cmdheight = 0
+
+vim.opt.keymodel = "startsel,stopsel"
+vim.opt.clipboard = "unnamedplus"
+
 vim.opt.relativenumber = false
 vim.opt.number = true
 
-local width, height = getScreenResolution()
+vim.opt.expandtab = true
+vim.opt.shiftwidth = 2
+vim.opt.tabstop = 2
 
+local width, height = getScreenResolution()
 if tonumber(width) == 2560 and tonumber(height) == 1440 then
   vim.g.neovide_scale_factor = 0.9
 else
   vim.g.neovide_scale_factor = 0.8
 end
-
-vim.opt.keymodel = "startsel,stopsel"
-
-vim.opt.clipboard = ""
