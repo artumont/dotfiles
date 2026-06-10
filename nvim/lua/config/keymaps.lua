@@ -34,3 +34,8 @@ map("t", "<Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
 map("n", "<leader>la", "<cmd>Lspsaga code_action<CR>", { desc = "Open Code Actions" })
 map("n", "<leader>ld", "<cmd>Lspsaga hover_doc<CR>", { desc = "Open Documentation" })
 map("n", "<leader>lr", "<cmd>Lspsaga rename<CR>", { desc = "Rename Symbol" })
+
+-- Surround Mappings
+map("x", '"', '<Plug>(operator-sandwich-add)"', { silent = true })
+map("x", "(", "<Plug>(operator-sandwich-add)(", { silent = true })
+map("x", ")", "<Plug>(operator-sandwich-add))", { silent = true })

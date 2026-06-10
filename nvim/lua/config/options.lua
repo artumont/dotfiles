@@ -22,6 +22,17 @@ vim.opt.tabstop = 2
 
 vim.opt.winbar = "%{%v:lua.require'lspsaga.symbol.winbar'.get_bar()%}"
 
+vim.diagnostic.config {
+  signs = {
+    text = {
+      [vim.diagnostic.severity.ERROR] = "󰅚",
+      [vim.diagnostic.severity.WARN] = "󰀪",
+      [vim.diagnostic.severity.INFO] = "󰋽",
+      [vim.diagnostic.severity.HINT] = "󰌶",
+    },
+  },
+}
+
 local width, height = getScreenResolution()
 if tonumber(width) == 2560 and tonumber(height) == 1440 then
   vim.g.neovide_scale_factor = 0.9
