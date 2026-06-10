@@ -20,9 +20,9 @@ return {
               function()
                 local ok, mini_icons = pcall(require, "mini.icons")
                 if not ok then return vim.fn.expand "%:t" end
-                  local icon, hl = mini_icons.get("filetype", vim.bo.filetype)
-                  local name = vim.fn.expand "%:t"
-                  return "%#" .. hl .. "#" .. icon .. "%* " .. name
+                local icon, hl = mini_icons.get("filetype", vim.bo.filetype)
+                local name = vim.fn.expand "%:t"
+                return "%#" .. hl .. "#" .. icon .. "%* " .. name
               end,
             },
           },

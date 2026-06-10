@@ -4,7 +4,7 @@ return {
     priority = 1000,
     lazy = false,
     ---@type snacks.Config
-    opts = {     
+    opts = {
       bigfile = { enabled = true },
       dashboard = { enabled = true },
       explorer = { enabled = false },
@@ -18,5 +18,5 @@ return {
       statuscolumn = { enabled = true },
       words = { enabled = true },
     },
-  }
+  },
 }
