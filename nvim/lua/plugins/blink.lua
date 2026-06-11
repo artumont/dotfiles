@@ -14,5 +14,9 @@ return {
         ["<C-y>"] = {},
       },
     },
+    keymap = {
+      preset = "super-tab",
+      ["<C-y>"] = {},
+    },
   },
 }
