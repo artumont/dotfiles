@@ -49,3 +49,14 @@ map("n", "<leader>xQ", "<cmd>Trouble qflist toggle<cr>", { desc = "Quickfix List
 -- Git Mappings
 map("n", "<leader>gd", function() require("mini.diff").toggle_overlay(0) end, { desc = "Toggle Git Diff" })
 map("n", "<leader>gg", function() require("neogit").open() end, { desc = "Open Neogit UI" })
+
+-- 99Agent Mappings
+map("v", "<leader>9v", function() require("99").visual() end, { desc = "Prompt agent on selection" })
+map("n", "<leader>9x", function() require("99").stop_all_requests() end, { desc = "Cancel all requests" })
+map("n", "<leader>9s", function() require("99").search() end, { desc = "Search codebase with agent" })
+map(
+  "n",
+  "<leader>9m",
+  function() require("99.extensions.telescope").select_model() end,
+  { desc = "Open model switcher" }
+)

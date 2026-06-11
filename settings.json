@@ -9,6 +9,11 @@
       "name": "Neovide",
       "dest": "~/.config/neovide/",
       "source": "./neovide"
+    },
+    {
+      "name": "Opencode Config",
+      "dest": "~/.config/opencode/opencode.json",
+      "source": "./opencode/opencode.json"
     }
   ]
 }
