@@ -16,7 +16,6 @@ return {
           ["<space>"] = "noop",
         },
       },
-      event_handlers = {},
       filesystem = {
         hijack_netrw_behavior = "disabled",
         filtered_items = {
