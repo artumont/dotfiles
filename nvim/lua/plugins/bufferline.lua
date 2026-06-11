@@ -6,6 +6,7 @@ return {
     opts = {
       options = {
         diagnostics = "nvim_lsp",
+        close_command = function(bufnr) Snacks.bufdelete(bufnr) end,
         offsets = {
           {
             filetype = "neo-tree",

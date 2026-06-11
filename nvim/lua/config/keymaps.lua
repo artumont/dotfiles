@@ -48,3 +48,4 @@ map("n", "<leader>xQ", "<cmd>Trouble qflist toggle<cr>", { desc = "Quickfix List
 
 -- Git Mappings
 map("n", "<leader>gd", function() require("mini.diff").toggle_overlay(0) end, { desc = "Toggle Git Diff" })
+map("n", "<leader>gg", function() require("neogit").open() end, { desc = "Open Neogit UI" })

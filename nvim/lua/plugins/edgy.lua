@@ -43,7 +43,7 @@ return {
           filter = function(buf) return vim.api.nvim_buf_get_name(buf):match "neo%-tree git_status" ~= nil end,
           pinned = true,
           collapsed = false,
-          size = { height = 0.5 },
+          size = { height = 1.0 },
           open = "Neotree git_status show right",
         },
       },
