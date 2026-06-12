@@ -5,7 +5,7 @@ return {
     lazy = false,
     opts = {
       indent = { char = "│" },
-      scope = { enabled = true },
+      scope = { enabled = true, show_end = false, show_start = false },
     },
   },
 }
