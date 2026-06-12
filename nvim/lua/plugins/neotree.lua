@@ -17,6 +17,8 @@ return {
         },
       },
       filesystem = {
+        bind_to_cwd = true,
+        use_libuv_file_watcher = true,
         hijack_netrw_behavior = "disabled",
         filtered_items = {
           visible = false,

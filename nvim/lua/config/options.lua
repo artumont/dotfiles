@@ -20,6 +20,8 @@ vim.opt.expandtab = true
 vim.opt.shiftwidth = 2
 vim.opt.tabstop = 2
 
+vim.opt.wrap = false
+
 vim.opt.winbar = "%{%v:lua.require'lspsaga.symbol.winbar'.get_bar()%}"
 
 vim.diagnostic.config {
