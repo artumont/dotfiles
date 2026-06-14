@@ -1,6 +1,9 @@
 local map = vim.keymap.set
 local del = vim.keymap.del
 
+-- State vars
+local virtual_text_enabled = true
+
 -- UI Toggles
 map("n", "<leader>E", "<cmd>Neotree toggle<CR>", { desc = "Toggle File Explorer" })
 map("n", "<leader>G", "<cmd>Neotree git_status toggle<CR>", { desc = "Toggle Git Explorer" })
@@ -32,9 +35,25 @@ map("n", "<leader>bd", "<cmd>b# | bd#<CR>", { desc = "Delete Current Buffer" })
 map("t", "<Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
 
 -- Lsp Actions
-map("n", "<leader>la", "<cmd>Lspsaga code_action<CR>", { desc = "Open Code Actions" })
-map("n", "<leader>ld", "<cmd>Lspsaga hover_doc<CR>", { desc = "Open Documentation" })
-map("n", "<leader>lr", "<cmd>Lspsaga rename<CR>", { desc = "Rename Symbol" })
+map("n", "la", "<cmd>Lspsaga code_action<CR>", { desc = "Open Code Actions" })
+map("n", "ld", "<cmd>Lspsaga hover_doc<CR>", { desc = "Open Documentation" })
+map("n", "lr", "<cmd>Lspsaga rename<CR>", { desc = "Rename Symbol" })
+map("n", "lD", "<cmd>Lspsaga hover_doc ++keep<CR>", { desc = "Open Documentation (keep)" })
+map("n", "lf", "<cmd>Lspsaga finder<CR>", { desc = "LSP Finder (refs/defs)" })
+map("n", "lp", "<cmd>Lspsaga peek_definition<CR>", { desc = "Peek Definition" })
+map("n", "lP", "<cmd>Lspsaga peek_type_definition<CR>", { desc = "Peek Type Definition" })
+map("n", "lo", "<cmd>Lspsaga outline<CR>", { desc = "Toggle Symbol Outline" })
+map("n", "lx", "<cmd>Lspsaga show_line_diagnostics<CR>", { desc = "Line Diagnostics" })
+map("n", "lX", "<cmd>Lspsaga show_cursor_diagnostics<CR>", { desc = "Cursor Diagnostics" })
+map("n", "[d", "<cmd>Lspsaga diagnostic_jump_prev<CR>", { desc = "Prev Diagnostic" })
+map("n", "]d", "<cmd>Lspsaga diagnostic_jump_next<CR>", { desc = "Next Diagnostic" })
+map("n", "gd", "<cmd>Lspsaga goto_definition<CR>", { desc = "Go to Definition" })
+map("n", "gt", "<cmd>Lspsaga goto_type_definition<CR>", { desc = "Go to Type Definition" })
+map("n", "lv", function()
+  virtual_text_enabled = not virtual_text_enabled
+  vim.diagnostic.config { virtual_text = virtual_text_enabled and opts.diagnostics.virtual_text or false }
+  vim.notify("Virtual text " .. (virtual_text_enabled and "enabled" or "disabled"), vim.log.levels.INFO)
+end, { desc = "Toggle LSP Virtual Text" })
 
 -- Surround Mappings
 map("x", '"', '<Plug>(operator-sandwich-add)"', { silent = true })
