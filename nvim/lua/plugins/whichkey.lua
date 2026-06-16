@@ -2,6 +2,10 @@ return {
   "folke/which-key.nvim",
   event = "VeryLazy",
   opts = {
+    triggers = {
+      { "<auto>", mode = "nixsotc" },
+      { "l", mode = "n" },
+    },
     spec = {
       { "<leader>E", icon = "󰙅" },
       { "<leader>b", icon = "", desc = "Buffer Actions" },

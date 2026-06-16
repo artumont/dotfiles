@@ -1,3 +1,4 @@
+-- Hooks
 vim.api.nvim_create_autocmd("VimEnter", {
   nested = true,
   callback = function()
