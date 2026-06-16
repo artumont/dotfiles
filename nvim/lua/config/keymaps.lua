@@ -15,7 +15,6 @@ map("n", "<leader>w", "<cmd>w<CR>", { desc = "Save File" })
 
 -- Avoid copy on delete
 map({ "n", "v" }, "d", '"_d', { noremap = true })
-map({ "n", "v" }, "x", '"_x', { noremap = true })
 map({ "n", "v" }, "D", '"_D', { noremap = true })
 map({ "n", "v" }, "c", '"_c', { noremap = true })
 map({ "n", "v" }, "C", '"_C', { noremap = true })
@@ -29,7 +28,10 @@ map("v", "<S-Tab>", "<gv", { noremap = true, silent = true, desc = "Dedent selec
 
 -- Buffer Navigation
 map("n", "<leader>bp", "<cmd>BufferLinePick<CR>", { desc = "Buffer Pick" })
-map("n", "<leader>bd", "<cmd>b# | bd#<CR>", { desc = "Delete Current Buffer" })
+map("n", "<leader>bd", function()
+  local bd = require("mini.bufremove").delete
+  bd(0, true)
+end, { desc = "Delete buffer" })
 
 -- Terminal Management
 map("t", "<Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
