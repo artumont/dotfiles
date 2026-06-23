@@ -32,26 +32,31 @@ map("n", "<leader>bd", function()
   local bd = require("mini.bufremove").delete
   bd(0, true)
 end, { desc = "Delete buffer" })
+map("n", "<leader>bD", function()
+  for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
+    if vim.api.nvim_buf_is_loaded(bufnr) then require("mini.bufremove").delete(bufnr, false) end
+  end
+end, { desc = "Delete all active buffers" })
 
 -- Terminal Management
 map("t", "<Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
 
 -- Lsp Actions
-map("n", "la", "<cmd>Lspsaga code_action<CR>", { desc = "Open Code Actions" })
-map("n", "ld", "<cmd>Lspsaga hover_doc<CR>", { desc = "Open Documentation" })
-map("n", "lr", "<cmd>Lspsaga rename<CR>", { desc = "Rename Symbol" })
-map("n", "lD", "<cmd>Lspsaga hover_doc ++keep<CR>", { desc = "Open Documentation (keep)" })
-map("n", "lf", "<cmd>Lspsaga finder<CR>", { desc = "LSP Finder (refs/defs)" })
-map("n", "lp", "<cmd>Lspsaga peek_definition<CR>", { desc = "Peek Definition" })
-map("n", "lP", "<cmd>Lspsaga peek_type_definition<CR>", { desc = "Peek Type Definition" })
-map("n", "lo", "<cmd>Lspsaga outline<CR>", { desc = "Toggle Symbol Outline" })
-map("n", "lx", "<cmd>Lspsaga show_line_diagnostics<CR>", { desc = "Line Diagnostics" })
-map("n", "lX", "<cmd>Lspsaga show_cursor_diagnostics<CR>", { desc = "Cursor Diagnostics" })
-map("n", "[d", "<cmd>Lspsaga diagnostic_jump_prev<CR>", { desc = "Prev Diagnostic" })
-map("n", "]d", "<cmd>Lspsaga diagnostic_jump_next<CR>", { desc = "Next Diagnostic" })
+map("n", "sa", "<cmd>Lspsaga code_action<CR>", { desc = "Open Code Actions" })
+map("n", "sd", "<cmd>Lspsaga hover_doc<CR>", { desc = "Open Documentation" })
+map("n", "sr", "<cmd>Lspsaga rename<CR>", { desc = "Rename Symbol" })
+map("n", "sD", "<cmd>Lspsaga hover_doc ++keep<CR>", { desc = "Open Documentation (keep)" })
+map("n", "sf", "<cmd>Lspsaga finder<CR>", { desc = "LSP Finder (refs/defs)" })
+map("n", "sp", "<cmd>Lspsaga peek_definition<CR>", { desc = "Peek Definition" })
+map("n", "sP", "<cmd>Lspsaga peek_type_definition<CR>", { desc = "Peek Type Definition" })
+map("n", "so", "<cmd>Lspsaga outline<CR>", { desc = "Toggle Symbol Outline" })
+map("n", "sx", "<cmd>Lspsaga show_line_diagnostics<CR>", { desc = "Line Diagnostics" })
+map("n", "sX", "<cmd>Lspsaga show_cursor_diagnostics<CR>", { desc = "Cursor Diagnostics" })
+map("n", "sj", "<cmd>Lspsaga diagnostic_jump_next<CR>", { desc = "Next Diagnostic" })
+map("n", "sk", "<cmd>Lspsaga diagnostic_jump_prev<CR>", { desc = "Prev Diagnostic" })
 map("n", "gd", "<cmd>Lspsaga goto_definition<CR>", { desc = "Go to Definition" })
 map("n", "gt", "<cmd>Lspsaga goto_type_definition<CR>", { desc = "Go to Type Definition" })
-map("n", "lv", function()
+map("n", "sv", function()
   virtual_text_enabled = not virtual_text_enabled
   vim.diagnostic.config { virtual_text = virtual_text_enabled and opts.diagnostics.virtual_text or false }
   vim.notify("Virtual text " .. (virtual_text_enabled and "enabled" or "disabled"), vim.log.levels.INFO)
@@ -81,3 +86,6 @@ map(
   function() require("99.extensions.telescope").select_model() end,
   { desc = "Open model switcher" }
 )
+
+-- Telescope Mappings
+map("n", "<C-f>", "<cmd>Telescope current_buffer_fuzzy_find<CR>", { desc = "Fuzzy find in current buffer " })
