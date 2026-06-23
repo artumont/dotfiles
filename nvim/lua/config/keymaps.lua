@@ -86,3 +86,6 @@ map(
 
 -- Telescope Mappings
 map("n", "<C-f>", "<cmd>Telescope current_buffer_fuzzy_find<CR>", { desc = "Fuzzy find in current buffer " })
+
+-- Deleted Mappings
+del("n", "s")
