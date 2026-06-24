@@ -9,7 +9,7 @@ return {
 
       _99.setup {
         provider = _99.Providers.OpencodeProvider,
-        model = "opencode/deepseek-v4-flash-free",
+        model = "opencode/mimo-v2.5-free",
         tmp_dir = "/tmp/99-neovim",
       }
     end,
