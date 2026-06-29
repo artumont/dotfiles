@@ -13,6 +13,7 @@ return {
       { "<leader>x", icon = "", desc = "Trouble Actions" },
       { "<leader>g", icon = "", desc = "Git Actions" },
       { "<leader>9", icon = "", desc = "99Agent Actions" },
+      { "<leader>R", icon = "", desc = "ESP idf Actions" },
     },
   },
 }

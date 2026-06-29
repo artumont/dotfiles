@@ -36,11 +36,12 @@ return {
             },
           },
         },
-        clangd = {}, -- placeholder, real config decided at attach-time below
       },
     },
     config = function(_, opts)
       vim.diagnostic.config(opts.diagnostics)
+
+      opts.servers.clangd = require("esp32").lsp_config()
 
       local underline_timer = nil
       vim.api.nvim_create_autocmd("TextChangedI", {
@@ -50,20 +51,7 @@ return {
         end,
       })
 
-      -- detect ESP-IDF projects: walk up from cwd looking for sdkconfig
-      local function is_esp_idf_project()
-        return vim.fs.find("sdkconfig", { upward = true, path = vim.fn.getcwd() })[1] ~= nil
-      end
-
       for server, server_opts in pairs(opts.servers) do
-        if server == "clangd" and is_esp_idf_project() then
-          server_opts = vim.tbl_deep_extend("force", require("esp32").lsp_config(), {
-            cmd = {
-              "clangd",
-              "--query-driver=/home/artu/.espressif/tools/**",
-            },
-          })
-        end
         vim.lsp.config(server, server_opts)
         vim.lsp.enable(server)
       end
