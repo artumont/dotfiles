@@ -32,7 +32,9 @@ File arg: open the file normally, no panels."
         (let ((ws (treemacs-current-workspace)))
           (dolist (p (treemacs-workspace->projects ws))
             (treemacs-do-remove-project-from-workspace p t nil)))
-        (treemacs-add-project-to-workspace (expand-file-name dir))
+        (treemacs-do-add-project-to-workspace (expand-file-name dir)
+                                              (file-name-nondirectory
+                                               (directory-file-name dir)))
 
         ;; Right panel: magit
         (require 'magit)
@@ -53,7 +55,9 @@ File arg: open the file normally, no panels."
         (let ((ws (treemacs-current-workspace)))
           (dolist (p (treemacs-workspace->projects ws))
             (treemacs-do-remove-project-from-workspace p t nil)))
-        (treemacs-add-project-to-workspace (expand-file-name dir))
+        (treemacs-do-add-project-to-workspace (expand-file-name dir)
+                                              (file-name-nondirectory
+                                               (directory-file-name dir)))
 
         ;; Right panel: magit
         (require 'magit)
