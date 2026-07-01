@@ -2,7 +2,7 @@
 
 ;; Set default font family and size
 (set-face-attribute 'default nil
-                    :font "Monaspace Neon Var-15"
+                    :font "Monaspace Neon Var"
                     :weight 'normal)
 
 ;; Enable antialiasing, subpixel rendering, and full hinting via font config
