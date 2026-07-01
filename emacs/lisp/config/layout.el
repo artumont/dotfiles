@@ -21,10 +21,12 @@ File arg: open the file normally, no panels."
         ;; Kill the Dired buffer Emacs opened for the directory
         (when (and main-buffer (eq (buffer-local-value 'major-mode main-buffer) 'dired-mode))
           (kill-buffer main-buffer))
-        ;; Make sure dashboard buffer exists, then switch to it
-        (unless (get-buffer "*dashboard*")
-          (dashboard-setup-startup-hook))
-        (switch-to-buffer "*dashboard*")
+        ;; Create and populate the dashboard buffer
+        (if (get-buffer "*dashboard*")
+            (switch-to-buffer "*dashboard*")
+          (dashboard-setup-startup-hook)
+          (switch-to-buffer "*dashboard*")
+          (dashboard-insert-startupify-lists))
 
         ;; Left panel: treemacs
         (require 'treemacs)
