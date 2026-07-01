@@ -16,14 +16,14 @@ return {
       bottom = {
         {
           ft = "toggleterm",
-          size = { height = 0.2 },
+          size = { height = 0.3 },
           filter = function(_, win) return vim.api.nvim_win_get_config(win).relative == "" end,
         },
         {
           title = "Trouble",
           ft = "trouble",
           filter = function(_, win) return vim.api.nvim_win_get_config(win).relative == "" end,
-          size = { height = 0.2 },
+          size = { height = 0.3 },
         },
       },
       left = {
@@ -32,7 +32,7 @@ return {
           ft = "neo-tree",
           filter = function(buf) return vim.api.nvim_buf_get_name(buf):match "neo%-tree filesystem" ~= nil end,
           pinned = true,
-          size = { height = 0.5 },
+          size = { height = 1.0, width = 0.15 },
           open = "Neotree filesystem",
         },
       },
@@ -43,7 +43,7 @@ return {
           filter = function(buf) return vim.api.nvim_buf_get_name(buf):match "neo%-tree git_status" ~= nil end,
           pinned = true,
           collapsed = false,
-          size = { height = 1.0 },
+          size = { height = 1.0, width = 0.15 },
           open = "Neotree git_status show right",
         },
       },
