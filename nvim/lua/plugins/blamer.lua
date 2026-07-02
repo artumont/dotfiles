@@ -1,3 +1,5 @@
+-- Git blame annotations in the gutter
+
 return {
   {
     "APZelos/blamer.nvim",

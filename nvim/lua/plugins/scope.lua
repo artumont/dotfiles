@@ -1,3 +1,5 @@
+-- Scoped buffer tabs per tabpage
+
 return {
   {
     "tiagovla/scope.nvim",

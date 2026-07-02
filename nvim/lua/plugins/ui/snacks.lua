@@ -1,3 +1,5 @@
+-- Collection of small QOL plugins (dashboard, notifier, picker, etc.)
+
 return {
   {
     "folke/snacks.nvim",

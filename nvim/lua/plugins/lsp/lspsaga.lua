@@ -1,3 +1,5 @@
+-- Enhanced LSP UI (code actions, rename, winbar symbols)
+
 return {
   {
     "nvimdev/lspsaga.nvim",

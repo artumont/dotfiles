@@ -1,3 +1,5 @@
+-- Syntax highlighting and code parsing via tree-sitter
+
 return {
   {
     "nvim-treesitter/nvim-treesitter",

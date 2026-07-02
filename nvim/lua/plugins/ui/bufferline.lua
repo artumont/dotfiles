@@ -27,7 +27,9 @@ return {
         Offset.edgy = true
       end
 
-      return {
+-- Tab-like buffer bar at the top
+
+return {
         options = {
           diagnostics = "nvim_lsp",
           close_command = function(bufnr) Snacks.bufdelete(bufnr) end,

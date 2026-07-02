@@ -1,3 +1,5 @@
+-- Terminal toggle utility
+
 return {
   {
     "akinsho/toggleterm.nvim",

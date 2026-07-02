@@ -1,3 +1,5 @@
+-- AI coding assistant integration via OpenCode
+
 return {
   {
     "ThePrimeagen/99",

@@ -1,3 +1,5 @@
+-- ESP-IDF development support (clangd, build integration)
+
 return {
   "Aietes/esp32.nvim",
   ft = { "c", "cpp" },

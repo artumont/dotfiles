@@ -1,3 +1,5 @@
+-- LSP server configuration and diagnostics
+
 return {
   {
     "neovim/nvim-lspconfig",

@@ -1,3 +1,5 @@
+-- Diagnostics list panel
+
 return {
   {
     "folke/trouble.nvim",

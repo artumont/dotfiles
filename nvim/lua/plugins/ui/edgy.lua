@@ -1,3 +1,5 @@
+-- Manage window layout positions (left/right/bottom edges)
+
 return {
   {
     "folke/edgy.nvim",

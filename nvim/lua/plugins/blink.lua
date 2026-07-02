@@ -1,3 +1,5 @@
+-- Autocompletion engine
+
 return {
   "Saghen/blink.cmp",
   version = "1.*",

@@ -1,3 +1,5 @@
+-- File and filetype icons
+
 return {
   {
     "nvim-mini/mini.icons",

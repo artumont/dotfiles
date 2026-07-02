@@ -1,3 +1,5 @@
+-- Auto-close brackets, quotes, and other delimiters
+
 return {
   {
     "windwp/nvim-autopairs",

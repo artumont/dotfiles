@@ -1,3 +1,5 @@
+-- Keybinding hint popup
+
 return {
   "folke/which-key.nvim",
   event = "VeryLazy",

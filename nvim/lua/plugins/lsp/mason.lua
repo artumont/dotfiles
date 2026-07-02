@@ -1,3 +1,5 @@
+-- LSP/tool package manager and auto-configuration
+
 return {
   {
     "williamboman/mason.nvim",

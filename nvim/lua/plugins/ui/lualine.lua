@@ -1,3 +1,5 @@
+-- Statusline component
+
 return {
   {
     "nvim-lualine/lualine.nvim",

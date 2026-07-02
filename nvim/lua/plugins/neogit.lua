@@ -1,3 +1,5 @@
+-- Git interface panel
+
 return {
   {
     "NeogitOrg/neogit",
