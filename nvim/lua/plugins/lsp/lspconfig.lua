@@ -41,8 +41,6 @@ return {
     config = function(_, opts)
       vim.diagnostic.config(opts.diagnostics)
 
-      opts.servers.clangd = require("esp32").lsp_config()
-
       local underline_timer = nil
       vim.api.nvim_create_autocmd("TextChangedI", {
         callback = function()

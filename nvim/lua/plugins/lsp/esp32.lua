@@ -1,8 +1,7 @@
 return {
   "Aietes/esp32.nvim",
   ft = { "c", "cpp" },
-  dependencies = { "folke/snacks.nvim" },
-
+  dependencies = { "folke/snacks.nvim", "neovim/nvim-lspconfig" },
   opts = {
     build_dir = "build",
     clangd_args = {
@@ -21,7 +20,11 @@ return {
         end
         handle:close()
       end
+      local clangd_opts = require("esp32").lsp_config()
+      require("lspconfig").clangd.setup(clangd_opts)
     end
+
     require("esp32").setup(opts)
   end,
 }
+
