@@ -13,9 +13,6 @@ return {
         border = "rounded",
         devicon = true,
       },
-      symbol_in_winbar = {
-        enable = true,
-      },
       code_action = {
         enable = true,
         keys = {

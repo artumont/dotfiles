@@ -15,19 +15,6 @@ return {
       },
       exit_when_last = false,
       animate = { enabled = false },
-      bottom = {
-        {
-          ft = "toggleterm",
-          size = { height = 0.25 },
-          filter = function(_, win) return vim.api.nvim_win_get_config(win).relative == "" end,
-        },
-        {
-          title = "Trouble",
-          ft = "trouble",
-          filter = function(_, win) return vim.api.nvim_win_get_config(win).relative == "" end,
-          size = { height = 0.25 },
-        },
-      },
       left = {
         {
           title = "Files",

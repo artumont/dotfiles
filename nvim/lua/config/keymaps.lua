@@ -2,13 +2,32 @@ local map = vim.keymap.set
 local del = vim.keymap.del
 
 -- State vars
+local term_buf = -1
+local term_height = 10
 local virtual_text_enabled = true
 
 -- UI Toggles
 map("n", "<leader>E", "<cmd>Neotree toggle<CR>", { desc = "Toggle File Explorer" })
 map("n", "<leader>G", "<cmd>Neotree git_status toggle<CR>", { desc = "Toggle Git Explorer" })
-map("n", "<leader>X", "<cmd>Trouble diagnostics toggle filter.buf=0<cr>", { desc = "Toggle Buffer Diagnostics" })
-map("n", "<leader>T", "<cmd>ToggleTerm<CR>", { desc = "Toggle Terminal Panel" })
+map("n", "<leader>T", function()
+  local win = vim.fn.bufwinnr(term_buf)
+
+  if win ~= -1 then
+    vim.cmd(win .. "wincmd c")
+  else
+    if vim.api.nvim_win_get_width(0) < 50 then vim.cmd "wincmd p" end
+
+    if vim.api.nvim_buf_is_valid(term_buf) then
+      vim.cmd("below " .. term_height .. "split")
+      vim.cmd("buffer " .. term_buf)
+    else
+      vim.cmd("below " .. term_height .. "split")
+      vim.cmd "terminal"
+      term_buf = vim.api.nvim_get_current_buf()
+      vim.bo[term_buf].buflisted = false
+    end
+  end
+end, { desc = "Toggle Terminal" })
 
 -- File Saving
 map("n", "<leader>w", "<cmd>w<CR>", { desc = "Save File" })
