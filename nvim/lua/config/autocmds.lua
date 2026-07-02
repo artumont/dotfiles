@@ -1,4 +1,13 @@
 -- Hooks
+
+local function open_sidepanels()
+  vim.defer_fn(function()
+    require("edgy").open()
+    vim.cmd "Neotree filesystem"
+    vim.cmd "Neotree git_status show right"
+  end, 100)
+end
+
 vim.api.nvim_create_autocmd("VimEnter", {
   nested = true,
   callback = function()
@@ -7,12 +16,12 @@ vim.api.nvim_create_autocmd("VimEnter", {
       vim.cmd "bwipeout!"
       vim.cmd("cd " .. vim.fn.fnameescape(arg))
     end
-    vim.defer_fn(function()
-      require("edgy").open()
-      vim.cmd "Neotree filesystem"
-      vim.cmd "Neotree git_status show right"
-    end, 100)
+    open_sidepanels()
   end,
+})
+
+vim.api.nvim_create_autocmd("TabNewEntered", {
+  callback = open_sidepanels,
 })
 
 vim.api.nvim_create_autocmd("BufWritePre", {
