@@ -15,10 +15,5 @@
       "dest": "~/.config/opencode/opencode.json",
       "source": "./opencode/opencode.json"
     },
-    {
-      "name": "Emacs",
-      "dest": "~/.emacs.d",
-      "source": "./emacs"
-    }
   ]
 }
