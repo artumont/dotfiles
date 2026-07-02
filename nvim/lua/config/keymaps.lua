@@ -27,7 +27,6 @@ map("v", "<Tab>", ">gv", { noremap = true, silent = true, desc = "Indent selecti
 map("v", "<S-Tab>", "<gv", { noremap = true, silent = true, desc = "Dedent selection" })
 
 -- Buffer Actions
-map("n", "<leader>bp", "<cmd>BufferLinePick<CR>", { desc = "Buffer Pick" })
 map("n", "<leader>bD", function()
   local bd = require("mini.bufremove").delete
   for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
@@ -36,6 +35,24 @@ map("n", "<leader>bD", function()
     end
   end
 end, { desc = "Delete all file buffers" })
+
+map("n", "<leader>bt", function() require("utils.buffer_switcher").switch() end, { desc = "Buffer Tab Switcher" })
+
+-- Bufferline Navigation
+map("n", "<leader>bn", "<cmd>BufferLineCycleNext<CR>", { desc = "Next Buffer" })
+map("n", "<leader>bp", "<cmd>BufferLineCyclePrev<CR>", { desc = "Previous Buffer" })
+map("n", "<leader>bd", "<cmd>BufferLineClose<CR>", { desc = "Close Buffer" })
+map("n", "<leader>bP", "<cmd>BufferLineTogglePin<CR>", { desc = "Pin/Unpin Buffer" })
+map("n", "<leader>bo", "<cmd>BufferLineCloseOthers<CR>", { desc = "Close Other Buffers" })
+map("n", "<leader>bl", "<cmd>BufferLineCloseRight<CR>", { desc = "Close Buffers to Right" })
+map("n", "<leader>bh", "<cmd>BufferLineCloseLeft<CR>", { desc = "Close Buffers to Left" })
+map("n", "<leader>bm", "<cmd>BufferLineMoveNext<CR>", { desc = "Move Buffer Right" })
+map("n", "<leader>bM", "<cmd>BufferLineMovePrev<CR>", { desc = "Move Buffer Left" })
+map("n", "<leader>bs", "<cmd>BufferLineSortByExtension<CR>", { desc = "Sort Buffers by Extension" })
+map("n", "<leader>bS", "<cmd>BufferLineSortByDirectory<CR>", { desc = "Sort Buffers by Directory" })
+for i = 1, 9 do
+  map("n", "<leader>bg" .. i, function() require("bufferline").go_to(i, true) end, { desc = "Go to Buffer " .. i })
+end
 
 -- Terminal Management
 map("t", "<Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
