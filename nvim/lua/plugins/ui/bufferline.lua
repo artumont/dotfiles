@@ -5,6 +5,7 @@ return {
     dependencies = { "echasnovski/mini.icons" },
     opts = function()
       local Offset = require "bufferline.offset"
+
       if not Offset.edgy then
         local get = Offset.get
         Offset.get = function()
@@ -27,19 +28,15 @@ return {
         Offset.edgy = true
       end
 
--- Tab-like buffer bar at the top
-
-return {
+      return {
         options = {
           diagnostics = "nvim_lsp",
           close_command = function(bufnr) Snacks.bufdelete(bufnr) end,
           custom_filter = function(buf) return vim.fn.bufname(buf) ~= "" end,
           indicator = { style = "none" },
           show_buffer_close_icons = true,
-          show_close_icon = false,
-          separator_style = "thin",
-          close_icon = "󰅖",
-          buffer_close_icon = "󰅖",
+          show_close_icon = true,
+          separator_style = "slant",
           get_element_icon = function(element)
             local ok, mini = pcall(require, "mini.icons")
             if not ok then return end
