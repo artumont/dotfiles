@@ -26,17 +26,16 @@ map("n", "Y", '"+Y', { noremap = true })
 map("v", "<Tab>", ">gv", { noremap = true, silent = true, desc = "Indent selection" })
 map("v", "<S-Tab>", "<gv", { noremap = true, silent = true, desc = "Dedent selection" })
 
--- Buffer Navigation
+-- Buffer Actions
 map("n", "<leader>bp", "<cmd>BufferLinePick<CR>", { desc = "Buffer Pick" })
-map("n", "<leader>bd", function()
-  local bd = require("mini.bufremove").delete
-  bd(0, true)
-end, { desc = "Delete buffer" })
 map("n", "<leader>bD", function()
+  local bd = require("mini.bufremove").delete
   for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
-    if vim.api.nvim_buf_is_loaded(bufnr) then require("mini.bufremove").delete(bufnr, false) end
+    if vim.api.nvim_buf_is_valid(bufnr) and vim.api.nvim_buf_is_loaded(bufnr) then
+      if vim.bo[bufnr].buftype == "" then bd(bufnr, false) end
+    end
   end
-end, { desc = "Delete all active buffers" })
+end, { desc = "Delete all file buffers" })
 
 -- Terminal Management
 map("t", "<Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" })

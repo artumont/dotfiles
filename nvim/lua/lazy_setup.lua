@@ -3,6 +3,7 @@ require("lazy").setup {
     { import = "plugins" },
     { import = "plugins.mini" },
     { import = "plugins.lsp" },
+    { import = "plugins.ui" },
     { import = "themes" },
   },
   install = { colorscheme = { "tokyonight" } },
