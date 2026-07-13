@@ -4,5 +4,13 @@
     "external_directory": {
       "/tmp/99-neovim/**": "allow"
     }
+  },
+  "mcp": {
+    "ida-pro": {
+      "type": "remote",
+      "url": "http://127.0.0.1:13337/mcp",
+      "enabled": true,
+      "env": {}
+    }
   }
 }
