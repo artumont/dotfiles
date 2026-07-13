@@ -22,7 +22,9 @@ return {
       end
 
       require("mason-lspconfig").setup {
-        automatic_enable = true,
+        automatic_enable = {
+          exclude = { "clangd" },
+        },
         handlers = {
           function(server_name) lspconfig[server_name].setup {} end,
 

@@ -11,12 +11,10 @@ map("n", "<leader>E", "<cmd>Neotree toggle<CR>", { desc = "Toggle File Explorer"
 map("n", "<leader>G", "<cmd>Neotree git_status toggle<CR>", { desc = "Toggle Git Explorer" })
 map("n", "<leader>T", function()
   local win = vim.fn.bufwinnr(term_buf)
-
   if win ~= -1 then
     vim.cmd(win .. "wincmd c")
   else
     if vim.api.nvim_win_get_width(0) < 50 then vim.cmd "wincmd p" end
-
     if vim.api.nvim_buf_is_valid(term_buf) then
       vim.cmd("below " .. term_height .. "split")
       vim.cmd("buffer " .. term_buf)
@@ -60,7 +58,7 @@ map("n", "<leader>bt", function() require("utils.buffer_switcher").switch() end,
 -- Bufferline Navigation
 map("n", "<leader>bn", "<cmd>BufferLineCycleNext<CR>", { desc = "Next Buffer" })
 map("n", "<leader>bp", "<cmd>BufferLineCyclePrev<CR>", { desc = "Previous Buffer" })
-map("n", "<leader>bd", "<cmd>BufferLineClose<CR>", { desc = "Close Buffer" })
+map("n", "<leader>bd", function() require("mini.bufremove").delete(0, false) end, { desc = "Close Buffer" })
 map("n", "<leader>bP", "<cmd>BufferLineTogglePin<CR>", { desc = "Pin/Unpin Buffer" })
 map("n", "<leader>bo", "<cmd>BufferLineCloseOthers<CR>", { desc = "Close Other Buffers" })
 map("n", "<leader>bl", "<cmd>BufferLineCloseRight<CR>", { desc = "Close Buffers to Right" })
@@ -106,6 +104,7 @@ map("x", "(", "<Plug>(operator-sandwich-add)(", { silent = true })
 map("x", ")", "<Plug>(operator-sandwich-add))", { silent = true })
 
 -- Trouble Mappings
+map("n", "<leader>xx", "<cmd>Trouble diagnostics toggle filter.buf=0<CR>", { desc = "Toggle Buffer Diagnostics" })
 map("n", "<leader>xX", "<cmd>Trouble diagnostics toggle<cr>", { desc = "Toggle Global Diagnostics" })
 map("n", "<leader>xL", "<cmd>Trouble loclist toggle<cr>", { desc = "Location List (Trouble)" })
 map("n", "<leader>xQ", "<cmd>Trouble qflist toggle<cr>", { desc = "Quickfix List (Trouble)" })
