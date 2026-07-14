@@ -73,6 +73,12 @@ for i = 1, 9 do
   map("n", "<leader>bg" .. i, function() require("bufferline").go_to(i, true) end, { desc = "Go to Buffer " .. i })
 end
 
+-- Tab Navigation Keybinds
+map("n", "<leader>to", ":tabnew<CR>", { desc = "Open new tab", noremap = true, silent = true })
+map("n", "<leader>td", ":tabclose<CR>", { desc = "Close current tab", noremap = true, silent = true })
+map("n", "<leader>tn", ":tabnext<CR>", { desc = "Go to next tab", noremap = true, silent = true })
+map("n", "<leader>tp", ":tabprevious<CR>", { desc = "Go to previous tab", noremap = true, silent = true })
+
 -- Terminal Management
 map("t", "<Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
 
