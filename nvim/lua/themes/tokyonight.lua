@@ -1,3 +1,5 @@
+-- Tokyo Night Theme
+
 return {
   {
     "folke/tokyonight.nvim",
