@@ -1,0 +1,12 @@
+{
+  "lastChangelogVersion": "0.80.8",
+  "theme": "dark",
+  "defaultProvider": "opencode",
+  "defaultModel": "mimo-v2.5-free",
+  "defaultThinkingLevel": "medium",
+  "packages": [
+    "npm:pi-mcp-adapter",
+    "npm:pi-caveman",
+    "npm:@the-agency/pi-spec-kit"
+  ]
+}
