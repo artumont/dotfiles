@@ -122,3 +122,6 @@ map("n", "<leader>ax", function() require("agent-smith").stop_all_requests() end
 
 -- Telescope Mappings
 map("n", "<C-f>", "<cmd>Telescope current_buffer_fuzzy_find<CR>", { desc = "Fuzzy find in current buffer " })
+
+-- Delete Mappings
+map("n", "<C-^>", "<Nop>")
