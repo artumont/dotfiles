@@ -9,6 +9,7 @@
     "npm:pi-caveman",
     "npm:@the-agency/pi-spec-kit",
     "npm:pi-agentsmd",
-    "npm:@raquezha/antigravity"
+    "npm:@raquezha/antigravity",
+    "npm:pi-web-access"
   ]
 }
