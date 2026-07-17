@@ -1,0 +1,6 @@
+*
+!.gitignore
+!mcp.json
+!settings.json
+!skills/
+!prompts/
