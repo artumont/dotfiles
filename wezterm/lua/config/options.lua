@@ -23,7 +23,18 @@ function M.apply(config)
 	config.show_tabs_in_tab_bar = true
 	config.show_new_tab_button_in_tab_bar = false
 
-	config.alternate_buffer_wheel_scroll_speed = 1
+	config.mouse_bindings = {
+		{
+			event = { Down = { streak = 1, button = { WheelUp = 1 } } },
+			mods = "NONE",
+			action = wezterm.action.ScrollByLine(-2),
+		},
+		{
+			event = { Down = { streak = 1, button = { WheelDown = 1 } } },
+			mods = "NONE",
+			action = wezterm.action.ScrollByLine(2),
+		},
+	}
 
 	return config
 end
