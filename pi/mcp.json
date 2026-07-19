@@ -1,9 +1,11 @@
 {
   "mcpServers": {
     "ida-pro": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/client-sse", "http://127.0.0.1:13337/mcp"],
-      "lifecycle": "lazy"
+      "type": "remote",
+      "transport": "streamable-http",
+      "url": "http://127.0.0.1:13337/mcp",
+      "lifecycle": "lazy",
+      "enabled": true
     }
   }
 }
