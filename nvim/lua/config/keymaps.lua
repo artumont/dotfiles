@@ -114,8 +114,8 @@ map("n", "<leader>gd", function() require("mini.diff").toggle_overlay(0) end, { 
 map("n", "<leader>gg", function() require("neogit").open() end, { desc = "Open Neogit UI" })
 
 -- Agent smith bindings
-map("v", "<leader>as", function() require("agent-smith").visual() end)
-map("v", "<leader>aS", function() require("agent-smith").multi_file() end)
+map("v", "as", function() require("agent-smith").visual() end)
+map("v", "aS", function() require("agent-smith").multi_file() end)
 map("n", "<leader>af", function() require("agent-smith").search() end)
 map("n", "<leader>av", function() require("agent-smith").vibe() end)
 map("n", "<leader>ax", function() require("agent-smith").stop_all_requests() end)
