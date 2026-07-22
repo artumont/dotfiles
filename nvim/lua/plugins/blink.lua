@@ -1,7 +1,7 @@
 -- Autocompletion engine
 
 return {
-  "Saghen/blink.cmp",
+  "saghen/blink.cmp",
   version = "1.*",
   dependencies = { "rafamadriz/friendly-snippets" },
   opts = {
