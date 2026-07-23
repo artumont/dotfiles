@@ -11,9 +11,9 @@
       "source": "./neovide"
     },
     {
-      "name": "OhMyPi Config",
-      "dest": "~/.omp/agent",
-      "source": "./omp"
+      "name": "Pi.dev Config",
+      "dest": "~/.pi/agent",
+      "source": "./pi"
     },
     {
       "name": "Wezterm Config",
