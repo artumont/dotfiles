@@ -13,8 +13,8 @@ function M.apply(config)
 
 	config.window_padding = { left = 12, right = 12, top = 4, bottom = 4 }
 	config.window_decorations = "TITLE|RESIZE"
-	config.initial_rows = 30
-	config.initial_cols = 115
+	config.initial_rows = 32
+	config.initial_cols = 117
 	config.default_cursor_style = "SteadyBlock"
 
 	config.use_fancy_tab_bar = false
