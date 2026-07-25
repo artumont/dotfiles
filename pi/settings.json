@@ -1,6 +1,6 @@
 {
   "lastChangelogVersion": "0.81.1",
-  "theme": "dark",
+  "theme": "dark/dark",
   "defaultProvider": "opencode",
   "defaultModel": "mimo-v2.5-free",
   "defaultThinkingLevel": "high",
@@ -11,6 +11,8 @@
     "npm:pi-agentsmd",
     "npm:pi-web-access",
     "npm:pi-subagents",
-    "npm:context-mode"
+    "npm:context-mode",
+    "npm:pi-claude-code-tui",
+    "npm:pi-lens"
   ]
 }
