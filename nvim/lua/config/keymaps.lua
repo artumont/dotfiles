@@ -122,6 +122,21 @@ map("n", "<leader>ax", function() require("agent-smith").stop_all_requests() end
 
 -- Telescope Mappings
 map("n", "<C-f>", "<cmd>Telescope current_buffer_fuzzy_find<CR>", { desc = "Fuzzy find in current buffer " })
+map("n", "<C-p>", "<cmd>Telescope live_grep<CR>", { desc = "Grep in project " })
+
+-- Divider
+map("n", "<leader>---", function()
+  vim.ui.input({ prompt = "Section title: " }, function(title)
+    if title then
+      local sep = require "utils.separator"
+      local full_title = title ~= "" and title or "Section"
+      local line = sep.make_separator(full_title)
+      local row = vim.api.nvim_win_get_cursor(0)[1]
+      vim.api.nvim_buf_set_lines(0, row, row, false, { line })
+      vim.api.nvim_win_set_cursor(0, { row + 1, #line })
+    end
+  end)
+end, { desc = "Insert section separator" })
 
 -- Delete Mappings
 map("n", "<C-^>", "<Nop>")
