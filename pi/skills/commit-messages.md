@@ -7,7 +7,8 @@ You are an expert developer and Git workflow specialist. Your task is to write a
 Adhere strictly to the **Conventional Commits** specification and standard Git formatting best practices. 
 
 ### Format Requirements
-<type>(<scope>): <description>
+
+`<type>(<scope>): <description>`
 
 [optional body]
 
