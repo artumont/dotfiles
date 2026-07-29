@@ -1,5 +1,4 @@
 ---
-
 name: effective-research
 description: Conducts rigorous, reproducible research from question definition through source discovery, evidence evaluation, contradiction analysis, synthesis, citation verification, and final reporting. Use for deep research, literature reviews, technical investigations, fact-checking, comparative analysis, high-stakes questions, or any task requiring conclusions grounded in multiple credible sources.
 ---
