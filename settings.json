@@ -19,6 +19,11 @@
       "name": "Wezterm Config",
       "dest": "~/.config/wezterm/",
       "source": "./wezterm/"
+    },
+    {
+      "name": "Luakit Config",
+      "dest": "~/.config/luakit/",
+      "source": "./luakit/"
     }
   ]
 }
