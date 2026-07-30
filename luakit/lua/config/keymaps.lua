@@ -1,7 +1,6 @@
 local modes = require "modes"
 local window = require "window"
-
--- ── Leader ────────────────────────────────────────────────────────────────
+local globals = require "config.globals"
 
 modes.remove_binds("normal", { "<space>" })
 modes.add_binds("normal", {
@@ -16,3 +15,37 @@ modes.add_binds("normal", {
 for _, w in pairs(window.bywidget) do
   if w:is_mode "normal" then w:update_binds "normal" end
 end
+
+-- ── Keybind mapping ──────────────────────────────────────────────────────────
+
+return {
+  { "<leader>t", group = true, icon = " ", desc = "Tab" },
+  {
+    "<leader>t.n",
+    icon = "",
+    desc = "New Tab",
+    action = function(w)
+      w:new_tab()
+      w:navigate(globals.default_page)
+    end,
+  },
+  { "<leader>t.d", icon = "", desc = "Close Tab", action = function(w) w:close_tab() end },
+  {
+    "<leader>t.D",
+    icon = "",
+    desc = "New Tab (Close Others)",
+    action = function(w)
+      w:new_tab(globals.default_page, { switch = true })
+      local keep = w.view
+      local to_close = {}
+      for _, view in ipairs(w.tabs.children) do
+        if view ~= keep then table.insert(to_close, view) end
+      end
+      for _, view in ipairs(to_close) do
+        w:close_tab(view)
+      end
+    end,
+  },
+  { "<leader>t.h", icon = "", desc = "Previous Tab", action = function(w) w:prev_tab() end },
+  { "<leader>t.l", icon = "", desc = "Next Tab", action = function(w) w:next_tab() end },
+}

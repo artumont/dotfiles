@@ -17,6 +17,7 @@ if not lfs.attributes(lazy_path) then
   )
   if not lfs.attributes(lazy_path) then error "failed to bootstrap lazy.luakit" end
 end
+if lfs.attributes(lazy_path) then os.execute(string.format("cd %q && git pull", lazy_path)) end
 
 -- ── Package Dir Inclusion ────────────────────────────────────────────────────
 
