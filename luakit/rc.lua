@@ -2,7 +2,11 @@ dofile "/etc/xdg/luakit/rc.lua"
 
 -- ── Lazy.luakit Bootstrap ────────────────────────────────────────────────────
 
-local lazy_path = luakit.data_dir .. "/lazy/lazy.luakit"
+local lazy_path = luakit.data_dir .. "/lazy.luakit"
+local legacy_lazy_path = luakit.data_dir .. "/lazy/lazy.luakit"
+if not lfs.attributes(lazy_path) and lfs.attributes(legacy_lazy_path) then
+  os.execute(string.format("mv %q %q", legacy_lazy_path, lazy_path))
+end
 if not lfs.attributes(lazy_path) then
   os.execute(
     string.format(
@@ -23,4 +27,5 @@ local lazy_lua = lazy_path .. "/lua"
 package.path = lazy_lua .. "/?.lua;" .. lazy_lua .. "/?/init.lua;" .. package.path
 
 require "config.options"
+require "config.keymaps"
 require "lazy_setup"

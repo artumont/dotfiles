@@ -24,6 +24,11 @@
       "name": "Luakit Config",
       "dest": "~/.config/luakit/",
       "source": "./luakit/"
+    },
+    {
+      "name": "EasyEffects Presets",
+      "dest": "~/.config/easyeffects/",
+      "source": "./easyeffects/"
     }
   ]
 }
