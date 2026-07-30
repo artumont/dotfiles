@@ -12,3 +12,4 @@ end
 
 settings.webview.hardware_acceleration_policy = "always"
 settings.application.prefer_dark_mode = true
+settings.window.default_search_engine = "google"
