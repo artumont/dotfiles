@@ -138,5 +138,8 @@ map("n", "<leader>---", function()
   end)
 end, { desc = "Insert section separator" })
 
+-- Paste mappings
+map("x", "p", [["_dP]], { desc = "Past without copy" })
+
 -- Delete Mappings
 map("n", "<C-^>", "<Nop>")
