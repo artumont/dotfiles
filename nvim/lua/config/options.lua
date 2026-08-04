@@ -20,6 +20,7 @@ vim.opt.expandtab = true
 vim.opt.shiftwidth = 2
 vim.opt.tabstop = 2
 
+vim.opt.autoread = true
 vim.opt.wrap = false
 
 vim.o.splitbelow = true

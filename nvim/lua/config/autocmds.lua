@@ -27,3 +27,13 @@ vim.api.nvim_create_autocmd("TabNewEntered", {
 vim.api.nvim_create_autocmd("BufWritePre", {
   callback = function() vim.lsp.buf.format { async = false, silent = true } end,
 })
+
+vim.api.nvim_create_autocmd({ "FocusGained", "BufEnter", "CursorHold", "CursorHoldI" }, {
+  pattern = "*",
+  command = "if mode() != 'c' | checktime | endif",
+})
+
+vim.api.nvim_create_autocmd({ "FileChangedShellPost" }, {
+  pattern = "*",
+  callback = function() vim.notify("File changed on disk. Reloaded.", vim.log.levels.WARN) end,
+})

@@ -2,7 +2,7 @@
   "lastChangelogVersion": "0.83.0",
   "theme": "dark/dark",
   "defaultProvider": "opencode",
-  "defaultModel": "deepseek-v4-flash-free",
+  "defaultModel": "mimo-v2.5-free",
   "defaultThinkingLevel": "high",
   "packages": [
     "npm:pi-mcp-adapter",
@@ -13,6 +13,7 @@
     "npm:pi-subagents",
     "npm:context-mode",
     "npm:pi-claude-code-tui",
-    "npm:pi-lens"
+    "npm:pi-lens",
+    "npm:pi-effort"
   ]
 }
