@@ -118,6 +118,7 @@ map("v", "as", function() require("agent-smith").visual() end)
 map("v", "aS", function() require("agent-smith").multi_file() end)
 map("n", "<leader>af", function() require("agent-smith").search() end)
 map("n", "<leader>av", function() require("agent-smith").vibe() end)
+map("n", "<leader>ar", function() require("agent-smith").progress() end)
 map("n", "<leader>ax", function() require("agent-smith").stop_all_requests() end)
 
 -- Telescope Mappings
