@@ -8,7 +8,6 @@ return {
         model = "opencode/mimo-v2.5-free",
         completion = { source = "blink", custom_rules = {} },
         md_files = { "AGENTS.md" },
-        tmp_dir = "/tmp/nvim/agent-smith",
       }
     end,
   },

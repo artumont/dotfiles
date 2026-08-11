@@ -12,7 +12,6 @@ function M.apply(config)
 	config.color_scheme = "Tokyo Night Storm"
 
 	config.window_padding = { left = 12, right = 12, top = 4, bottom = 4 }
-	config.window_decorations = "TITLE|RESIZE"
 	config.initial_rows = 35
 	config.initial_cols = 120
 	config.default_cursor_style = "SteadyBlock"
