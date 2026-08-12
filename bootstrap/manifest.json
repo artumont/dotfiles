@@ -1,0 +1,44 @@
+{
+  "links": [
+    {
+      "name": "Neovim",
+      "source": "home/.config/nvim",
+      "dest": "~/.config/nvim"
+    },
+    {
+      "name": "Neovide",
+      "source": "home/.config/neovide",
+      "dest": "~/.config/neovide"
+    },
+    {
+      "name": "WezTerm",
+      "source": "home/.config/wezterm",
+      "dest": "~/.config/wezterm"
+    },
+    {
+      "name": "Luakit",
+      "source": "home/.config/luakit",
+      "dest": "~/.config/luakit"
+    },
+    {
+      "name": "EasyEffects",
+      "source": "home/.config/easyeffects",
+      "dest": "~/.config/easyeffects"
+    },
+    {
+      "name": "Pi settings",
+      "source": "home/.pi/agent/settings.json",
+      "dest": "~/.pi/agent/settings.json"
+    },
+    {
+      "name": "Pi MCP config",
+      "source": "home/.pi/agent/mcp.json",
+      "dest": "~/.pi/agent/mcp.json"
+    },
+    {
+      "name": "Pi skills",
+      "source": "home/.pi/agent/skills",
+      "dest": "~/.pi/agent/skills"
+    }
+  ]
+}
