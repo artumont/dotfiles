@@ -1,7 +1,12 @@
 -- Markdown preview
 
 return {
-  "OXY2DEV/markview.nvim",
-  lazy = false,
-  dependencies = { "saghen/blink.cmp" },
+  {
+    "selimacerbas/markdown-preview.nvim",
+    dependencies = { "selimacerbas/live-server.nvim" },
+  },
+  {
+    "OXY2DEV/markview.nvim",
+    dependencies = { "saghen/blink.cmp" },
+  },
 }
