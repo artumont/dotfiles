@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         DarkMode (Powerscripts)
 // @namespace    https://powerscripts.luakit/darkmode
-// @version      5.0.0
+// @version      5.0.1
 // @description  True DarkReader dynamic theming - analyzes stylesheets, not filter
 // @match        *://*/*
 // @run-at       document-start
@@ -108,10 +108,39 @@
         else try { if(window.DarkReader && window.DarkReader.isEnabled()) window.DarkReader.disable(); } catch(e){}
     };
     addEventListener('popstate', obsNav);
+    addEventListener('pageshow', obsNav);
     const _push = history.pushState; if(_push) history.pushState = function(){ const r=_push.apply(this,arguments); obsNav(); return r; };
     const _rep = history.replaceState; if(_rep) history.replaceState = function(){ const r=_rep.apply(this,arguments); obsNav(); return r; };
 
     // MutationObserver for which-key popup etc - ensure they are not darkened (DarkReader respects data-darkreader-ignore)
+    // Keep DarkReader alive across Google-style DOM swaps (search without full reload)
+    let lastDomCheck = 0;
+    const domObserver = new MutationObserver(() => {
+        const now = Date.now();
+        if (now - lastDomCheck < 1000) return; // throttle 1s
+        lastDomCheck = now;
+        const en = getSetting(`dark_mode_${location.hostname}`, true);
+        if (en) {
+            // Re-enable if DarkReader got disabled by navigation or new content
+            if (window.DarkReader && !window.DarkReader.isEnabled()) {
+                try { window.DarkReader.enable(DR_CONFIG); } catch(e){}
+            }
+            // Ensure html still has dark marker (Google wipes it on search)
+            if (!document.documentElement.classList.contains('extension-dark-mode') &&
+                !document.documentElement.hasAttribute('data-darkreader-scheme')) {
+                document.documentElement.classList.add('extension-dark-mode');
+                document.documentElement.setAttribute('data-darkreader-scheme','dark');
+            }
+        }
+    });
+    // Observe body for Google search results injection
+    const startDomObserver = () => {
+        const target = document.body || document.documentElement;
+        if (target) domObserver.observe(target, {childList:true, subtree:true});
+    };
+    if (document.body) startDomObserver();
+    else document.addEventListener('DOMContentLoaded', startDomObserver);
+
     const wkObserver = new MutationObserver(() => {
         const wk = document.getElementById('-wk-root');
         if (wk) wk.setAttribute('data-darkreader-ignore','');
