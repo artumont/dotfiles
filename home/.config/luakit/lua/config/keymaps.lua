@@ -48,4 +48,30 @@ return {
   },
   { "<leader>t.h", icon = "", desc = "Previous Tab", action = function(w) w:prev_tab() end },
   { "<leader>t.l", icon = "", desc = "Next Tab", action = function(w) w:next_tab() end },
+  { "<leader>p", group = true, icon = "⚡", desc = "PowerScripts" },
+  { "<leader>p.d", group = true, icon = "🌙", desc = "DarkMode" },
+  {
+    "<leader>p.d.t",
+    icon = "🌙",
+    desc = "Toggle darkmode",
+    action = function(w) w.view:eval_js("window.__darkmode_toggle && window.__darkmode_toggle()", { no_return = true }) end,
+  },
+  {
+    "<leader>p.d.g",
+    icon = "⚙",
+    desc = "Open darkmode GUI",
+    action = function(w) w.view:eval_js("window.__darkmode_show_gui && window.__darkmode_show_gui()", { no_return = true }) end,
+  },
+  {
+    "<leader>p.d.e",
+    icon = "+",
+    desc = "Enable darkmode",
+    action = function(w) w.view:eval_js("window.__darkmode_enable && window.__darkmode_enable()", { no_return = true }) end,
+  },
+  {
+    "<leader>p.d.d",
+    icon = "-",
+    desc = "Disable darkmode",
+    action = function(w) w.view:eval_js("window.__darkmode_disable && window.__darkmode_disable()", { no_return = true }) end,
+  },
 }
