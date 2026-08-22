@@ -57,14 +57,6 @@ return {
     action = function(w) w.view:eval_js("window.__darkmode_toggle && window.__darkmode_toggle()", { no_return = true }) end,
   },
   {
-    "<leader>p.d.g",
-    icon = "",
-    desc = "Open darkmode GUI",
-    action = function(w)
-      w.view:eval_js("window.__darkmode_show_gui && window.__darkmode_show_gui()", { no_return = true })
-    end,
-  },
-  {
     "<leader>p.d.e",
     icon = "",
     desc = "Enable darkmode",
