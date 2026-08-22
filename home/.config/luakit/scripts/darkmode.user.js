@@ -1,15 +1,14 @@
 // ==UserScript==
 // @name         DarkMode (Powerscripts)
 // @namespace    https://powerscripts.luakit/darkmode
-// @version      2.0.0
-// @description  Smart dark mode - opt-in per site, excludes which-key popups
+// @version      3.0.0
+// @description  Smart dark mode - opt-in per site, no flash, excludes popups
 // @author       adapted from rkshrksh/dark-mode-userscript
 // @match        *://*/*
 // @run-at       document-start
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        GM_addStyle
-// @grant        GM_registerMenuCommand
 // ==/UserScript==
 
 (function () {
@@ -17,25 +16,23 @@
 
     const domain = window.location.hostname;
 
-    function getSetting(key, def) {
+    function getSetting(k, d) {
         try {
-            if (typeof GM_getValue !== 'undefined') return GM_getValue(key, def);
-            const v = localStorage.getItem(key);
-            return v !== null ? JSON.parse(v) : def;
-        } catch(e) { return def; }
+            if (typeof GM_getValue !== 'undefined') return GM_getValue(k, d);
+            const v = localStorage.getItem(k);
+            return v !== null ? JSON.parse(v) : d;
+        } catch(e) { return d; }
     }
-    function setSetting(key, val) {
+    function setSetting(k, v) {
         try {
-            if (typeof GM_setValue !== 'undefined') GM_setValue(key, val);
-            else localStorage.setItem(key, JSON.stringify(val));
+            if (typeof GM_setValue !== 'undefined') GM_setValue(k, v);
+            else localStorage.setItem(k, JSON.stringify(v));
         } catch(e) {}
     }
 
-    // --- double-dark detection ---
     function isAlreadyDark() {
         try {
             if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                // site prefers dark, check if it actually uses dark bg
                 const bg = getComputedStyle(document.documentElement).backgroundColor;
                 const m = bg && bg.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
                 if (m) {
@@ -43,11 +40,9 @@
                     if (lum < 0.45) return true;
                 }
             }
-            // check common dark class signals
             if (document.documentElement.classList.contains('dark') ||
                 document.documentElement.getAttribute('data-theme') === 'dark' ||
-                document.body.classList.contains('dark')) return true;
-            // check computed bg luminance
+                (document.body && document.body.classList.contains('dark'))) return true;
             const bg2 = getComputedStyle(document.body || document.documentElement).backgroundColor;
             const mm = bg2 && bg2.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
             if (mm) {
@@ -58,69 +53,45 @@
         return false;
     }
 
-    const POSITIONS = ['bottom-right', 'bottom-left', 'top-right', 'top-left'];
-    let currentPosition = getSetting(`dark_mode_position_${domain}`, 'bottom-right');
     const isEnabledForDomain = getSetting(`dark_mode_${domain}`, false);
 
     const css = `
         html.extension-dark-mode {
-             filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(1.1) !important;
+             filter: invert(1) hue-rotate(180deg) brightness(0.95) contrast(1.05) !important;
              background-color: white !important;
              color-scheme: dark !important;
         }
         html {
-            transition: filter 0.3s ease, background-color 0.3s ease;
+            transition: filter 0.25s ease, background-color 0.25s ease;
+            color-scheme: light dark;
+        }
+        /* flash prevention: dark bg immediately while loading */
+        html.extension-dark-mode-preload {
+            background: #121212 !important;
+            color-scheme: dark !important;
         }
         html.extension-dark-mode img,
         html.extension-dark-mode video,
         html.extension-dark-mode iframe,
         html.extension-dark-mode canvas,
-        html.extension-dark-mode svg {
-             filter: invert(1) hue-rotate(180deg) !important;
+        html.extension-dark-mode svg,
+        html.extension-dark-mode embed,
+        html.extension-dark-mode object {
+             filter: invert(1) hue-rotate(180deg) brightness(0.95) contrast(1.05) !important;
         }
-        /* exclusions: which-key popup lives in Shadow DOM host #-wk-root (child of html) */
+        /* exclusions: which-key Shadow host and generic popups */
         html.extension-dark-mode #-wk-root {
-             filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(1.1) !important;
+             filter: invert(1) hue-rotate(180deg) brightness(0.95) contrast(1.05) !important;
         }
-        /* darkmode toggle itself - keep as designed (double invert cancels html invert) */
-        html.extension-dark-mode #dark-mode-toggle-btn {
-             filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(1.1) !important;
-        }
-        /* generic ignore attribute for any non-page popups */
         html.extension-dark-mode [data-darkmode-ignore],
-        html.extension-dark-mode [data-powerscripts-ignore] {
-             filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(1.1) !important;
+        html.extension-dark-mode [data-powerscripts-ignore],
+        html.extension-dark-mode [data-wk-ignore] {
+             filter: invert(1) hue-rotate(180deg) brightness(0.95) contrast(1.05) !important;
         }
-        #dark-mode-toggle-btn {
-            position: fixed;
-            --toggle-bottom: 20px;
-            --toggle-right: 20px;
-            bottom: var(--toggle-bottom);
-            right: var(--toggle-right);
-            z-index: 2147483647;
-            background: #333;
-            color: white;
-            border: 2px solid #fff;
-            outline: 2px solid #333;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3), 0 0 0 2px rgba(255,255,255,0.3);
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            font-size: 24px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-            user-select: none;
-            opacity: 0.8;
+        /* darkmode GUI itself - double invert to appear normal */
+        html.extension-dark-mode #ps-darkmode-gui {
+             filter: invert(1) hue-rotate(180deg) brightness(0.95) contrast(1.05) !important;
         }
-        #dark-mode-toggle-btn.position-bottom-left { --toggle-right: auto; --toggle-left: 20px; left: var(--toggle-left); }
-        #dark-mode-toggle-btn.position-top-right { --toggle-bottom: auto; --toggle-top: 20px; top: var(--toggle-top); }
-        #dark-mode-toggle-btn.position-top-left { --toggle-bottom: auto; --toggle-top: 20px; --toggle-right: auto; --toggle-left: 20px; top: var(--toggle-top); left: var(--toggle-left); }
-        #dark-mode-toggle-btn:hover { transform: scale(1.1); background: #555; opacity: 1; }
-        #dark-mode-toggle-btn.active { background: #e2e8f0; color: #1a202c; border-color: #1a202c; outline-color: #e2e8f0; }
-        /* GUI panel */
         #ps-darkmode-gui {
             position: fixed;
             top: 20px;
@@ -129,9 +100,9 @@
             background: #1e1e2e;
             color: #e8e6e3;
             border: 1px solid #444;
-            border-radius: 8px;
+            border-radius: 10px;
             padding: 16px;
-            min-width: 240px;
+            min-width: 260px;
             font-family: monospace;
             font-size: 13px;
             box-shadow: 0 8px 24px rgba(0,0,0,0.4);
@@ -140,72 +111,67 @@
         #ps-darkmode-gui[data-visible="true"] { display: block; }
         #ps-darkmode-gui h3 { margin: 0 0 12px 0; font-size: 14px; }
         #ps-darkmode-gui label { display: flex; align-items: center; gap: 8px; margin: 8px 0; cursor: pointer; }
-        #ps-darkmode-gui button { margin-top: 12px; padding: 6px 12px; cursor: pointer; }
-        html.extension-dark-mode #ps-darkmode-gui {
-            filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(1.1) !important;
-        }
+        #ps-darkmode-gui button { margin-top: 12px; padding: 6px 12px; cursor: pointer; border-radius: 6px; border: 1px solid #555; background: #2a2a3a; color: #eee; }
+        #ps-darkmode-gui button:hover { background: #3a3a4a; }
+        #ps-darkmode-gui .ps-gui-hint { font-size: 11px; opacity: 0.6; margin-top: 8px; }
     `;
 
-    function injectStylesAndUI() {
+    function injectStyles() {
         if (!document.documentElement) return;
         if (!document.getElementById('dark-mode-core-css')) {
             const style = document.createElement('style');
             style.id = 'dark-mode-core-css';
             style.textContent = css;
-            document.documentElement.appendChild(style);
+            // inject as early as possible - before any other styles
+            const target = document.head || document.documentElement;
+            target.insertBefore(style, target.firstChild);
         }
-        if (isEnabledForDomain) {
+        // force dark color-scheme immediately to prevent flash
+        try {
+            let meta = document.querySelector('meta[name="color-scheme"]');
+            if (!meta) {
+                meta = document.createElement('meta');
+                meta.name = 'color-scheme';
+                meta.content = 'dark light';
+                document.head && document.head.appendChild(meta);
+            }
+        } catch(e) {}
+        if (isEnabledForDomain && !isAlreadyDark()) {
+            document.documentElement.classList.add('extension-dark-mode');
+            // preload class for instant dark bg before filter applies
+            document.documentElement.classList.add('extension-dark-mode-preload');
+            // remove preload after filter is active to avoid conflicts
+            setTimeout(() => document.documentElement.classList.remove('extension-dark-mode-preload'), 100);
+        }
+    }
+
+    // inject immediately (document-start)
+    injectStyles();
+
+    function setEnabled(on) {
+        if (on) {
             if (isAlreadyDark()) {
-                if (typeof PS !== 'undefined' && PS.log) PS.log('darkmode: site already dark, skipping auto-enable for ' + domain);
-                else console.log('darkmode: site already dark, skipping');
-            } else {
-                document.documentElement.classList.add('extension-dark-mode');
+                if (typeof PS !== 'undefined' && PS.log) PS.log('darkmode: site already dark, skipping');
+                return false;
             }
+            document.documentElement.classList.add('extension-dark-mode');
+            setSetting(`dark_mode_${domain}`, true);
+            updateGUI();
+            return true;
+        } else {
+            document.documentElement.classList.remove('extension-dark-mode');
+            setSetting(`dark_mode_${domain}`, false);
+            updateGUI();
+            return true;
         }
     }
-    injectStylesAndUI();
 
-    function createToggleButton() {
-        if (window !== window.top) return;
-        if (!document.body || document.getElementById('dark-mode-toggle-btn')) return;
-        const currentlyEnabled = getSetting(`dark_mode_${domain}`, false);
-        const btn = document.createElement('button');
-        btn.id = 'dark-mode-toggle-btn';
-        btn.innerHTML = currentlyEnabled ? '☀️' : '🌙';
-        btn.title = "Toggle Dark Mode (right-click: move)";
-        if (currentlyEnabled) btn.classList.add('active');
-        if (currentPosition && currentPosition !== 'bottom-right') btn.classList.add(`position-${currentPosition}`);
-        btn.addEventListener('click', () => {
-            const on = document.documentElement.classList.contains('extension-dark-mode');
-            if (on) {
-                document.documentElement.classList.remove('extension-dark-mode');
-                setSetting(`dark_mode_${domain}`, false);
-                btn.innerHTML = '🌙'; btn.classList.remove('active');
-            } else {
-                if (isAlreadyDark()) {
-                    if (typeof PS !== 'undefined' && PS.log) PS.log('darkmode: not enabling - site already dark');
-                    return;
-                }
-                document.documentElement.classList.add('extension-dark-mode');
-                setSetting(`dark_mode_${domain}`, true);
-                btn.innerHTML = '☀️'; btn.classList.add('active');
-            }
-        });
-        btn.addEventListener('contextmenu', (e) => {
-            e.preventDefault();
-            const idx = POSITIONS.indexOf(currentPosition);
-            const next = POSITIONS[(idx + 1) % POSITIONS.length];
-            currentPosition = next;
-            POSITIONS.forEach(p => btn.classList.remove(`position-${p}`));
-            if (next !== 'bottom-right') btn.classList.add(`position-${next}`);
-            setSetting(`dark_mode_position_${domain}`, next);
-            btn.title = `Position: ${next.replace('-',' ')}`;
-            setTimeout(() => btn.title = "Toggle Dark Mode (right-click: move)", 1500);
-        });
-        document.body.appendChild(btn);
+    function toggle() {
+        const on = document.documentElement.classList.contains('extension-dark-mode');
+        return setEnabled(!on);
     }
 
-    // GUI panel
+    // GUI
     function createGUI() {
         if (document.getElementById('ps-darkmode-gui')) return;
         const gui = document.createElement('div');
@@ -214,70 +180,54 @@
         gui.innerHTML = `
             <h3>DarkMode Control</h3>
             <label><input type="checkbox" id="ps-darkmode-enabled"> Enabled for this site</label>
-            <div style="margin-top:8px; font-size:11px; opacity:0.7;">Domain: ${domain}</div>
-            <div style="margin-top:4px; font-size:11px; opacity:0.7;" id="ps-darkmode-status"></div>
+            <div style="font-size:11px; opacity:0.7; margin-top:4px;">\${domain}</div>
+            <div style="font-size:11px; opacity:0.6;" id="ps-darkmode-status"></div>
+            <div class="ps-gui-hint">Controlled via <b>&lt;leader&gt; p d</b> which-key menu</div>
             <button id="ps-darkmode-gui-close">Close</button>
         `;
-        document.body.appendChild(gui);
+        (document.body || document.documentElement).appendChild(gui);
         const chk = gui.querySelector('#ps-darkmode-enabled');
-        const status = gui.querySelector('#ps-darkmode-status');
         const update = () => {
             const on = document.documentElement.classList.contains('extension-dark-mode');
             chk.checked = on;
-            status.textContent = on ? 'Status: ON' : (isAlreadyDark() ? 'Status: site already dark' : 'Status: OFF');
+            const st = gui.querySelector('#ps-darkmode-status');
+            st.textContent = on ? 'Status: ON' : (isAlreadyDark() ? 'Status: site already dark' : 'Status: OFF');
         };
-        chk.addEventListener('change', () => {
-            document.getElementById('dark-mode-toggle-btn')?.click();
-            setTimeout(update, 50);
-        });
-        gui.querySelector('#ps-darkmode-gui-close').addEventListener('click', () => {
-            gui.setAttribute('data-visible', 'false');
-        });
+        chk.addEventListener('change', () => { toggle(); setTimeout(update, 20); });
+        gui.querySelector('#ps-darkmode-gui-close').addEventListener('click', () => gui.setAttribute('data-visible','false'));
         update();
+        window.__darkmode_update_gui = update;
+    }
+    function updateGUI() {
+        const upd = window.__darkmode_update_gui;
+        if (upd) upd();
+        const chk = document.querySelector('#ps-darkmode-gui #ps-darkmode-enabled');
+        if (chk) chk.checked = document.documentElement.classList.contains('extension-dark-mode');
     }
 
-    window.__darkmode_toggle = () => document.getElementById('dark-mode-toggle-btn')?.click();
-    window.__darkmode_enable = () => {
-        if (!document.documentElement.classList.contains('extension-dark-mode')) {
-            document.getElementById('dark-mode-toggle-btn')?.click();
-        }
-    };
-    window.__darkmode_disable = () => {
-        if (document.documentElement.classList.contains('extension-dark-mode')) {
-            document.getElementById('dark-mode-toggle-btn')?.click();
-        }
-    };
+    window.__darkmode_toggle = toggle;
+    window.__darkmode_enable = () => setEnabled(true);
+    window.__darkmode_disable = () => setEnabled(false);
     window.__darkmode_show_gui = () => {
-        createGUI();
+        if (!document.getElementById('ps-darkmode-gui')) createGUI();
         const g = document.getElementById('ps-darkmode-gui');
-        if (g) g.setAttribute('data-visible', g.getAttribute('data-visible') === 'true' ? 'false' : 'true');
+        if (g) {
+            const isVis = g.getAttribute('data-visible') === 'true';
+            g.setAttribute('data-visible', isVis ? 'false' : 'true');
+            if (!isVis) createGUI();
+        }
     };
     window.__darkmode_toggle_gui = window.__darkmode_show_gui;
 
-    // Polyfill GM_registerMenuCommand as which-key fallback (no-op)
+    // Polyfill GM_registerMenuCommand
     if (typeof GM_registerMenuCommand === 'undefined') window.GM_registerMenuCommand = () => {};
-
-    if (typeof GM_registerMenuCommand !== "undefined") {
-        try { GM_registerMenuCommand("Toggle Dark Mode", () => document.getElementById('dark-mode-toggle-btn')?.click()); } catch(e) {}
-    }
+    try { GM_registerMenuCommand("Toggle Dark Mode", () => window.__darkmode_toggle()); } catch(e) {}
 
     const observeNavigation = () => {
         const nd = window.location.hostname;
         const en = getSetting(`dark_mode_${nd}`, false);
-        const pos = getSetting(`dark_mode_position_${nd}`, 'bottom-right');
-        let btn = document.getElementById('dark-mode-toggle-btn');
         if (en && !isAlreadyDark()) document.documentElement.classList.add('extension-dark-mode');
         else document.documentElement.classList.remove('extension-dark-mode');
-        if (!btn) { createToggleButton(); btn = document.getElementById('dark-mode-toggle-btn'); }
-        if (btn) {
-            if (en) { btn.innerHTML = '☀️'; btn.classList.add('active'); }
-            else { btn.innerHTML = '🌙'; btn.classList.remove('active'); }
-            if (pos) {
-                POSITIONS.forEach(p => btn.classList.remove(`position-${p}`));
-                if (pos !== 'bottom-right') btn.classList.add(`position-${pos}`);
-                currentPosition = pos;
-            }
-        }
     };
     window.addEventListener('popstate', observeNavigation);
     const _push = history.pushState;
@@ -285,17 +235,15 @@
     const _rep = history.replaceState;
     if (_rep) history.replaceState = function(){ const r=_rep.apply(this, arguments); observeNavigation(); return r; };
 
-    function initUI() {
-        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', createToggleButton);
-        else createToggleButton();
-        let a=0; const iv=setInterval(()=>{ a++; if(document.getElementById('dark-mode-toggle-btn')){ clearInterval(iv); setupObserver(); return; } if(a>=20){ clearInterval(iv); setupObserver(); return; } createToggleButton(); },500);
+    // ensure GUI parent exists when body appears
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => { injectStyles(); });
     }
-    initUI();
-    function setupObserver(){
+    // MutationObserver for SPA body replacement - no toggle recreation needed now
+    const setupObserver = () => {
         if (!document.body) return;
-        const o=new MutationObserver((muts)=>{
-            for(const m of muts){ if(m.type==='childList'){ const b=document.getElementById('dark-mode-toggle-btn'); if(!b && window===window.top){ createToggleButton(); break; } } }
-        });
-        o.observe(document.body,{childList:true,subtree:true});
-    }
+        // no floating button to recreate, just keep GUI alive
+    };
+    if (document.body) setupObserver();
+    else document.addEventListener('DOMContentLoaded', setupObserver);
 })();
