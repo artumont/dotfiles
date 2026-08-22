@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         DarkMode (Powerscripts)
 // @namespace    https://powerscripts.luakit/darkmode
-// @version      4.0.0
+// @version      4.1.0
 // @description  DarkReader-style dynamic dark mode - no flash, excludes popups
 // @match        *://*/*
 // @run-at       document-start
@@ -42,7 +42,7 @@
         return false;
     }
 
-    const enabled = () => getSetting(`dark_mode_${domain}`, false);
+    const enabled = () => getSetting(`dark_mode_${domain}`, true);
 
     // --- Core dark CSS + DarkReader dynamic theming vars ---
     const css = `
@@ -144,7 +144,7 @@
             meta.content='dark light';
             document.documentElement.style.colorScheme='dark';
             // preload bg immediately if enabled
-            if (getSetting(`dark_mode_${domain}`, false) && !isAlreadyDark()) {
+            if (getSetting(`dark_mode_${domain}`, true) && !isAlreadyDark()) {
                 document.documentElement.classList.add('extension-dark-mode');
                 document.documentElement.classList.add('extension-dark-mode-preload');
                 setTimeout(()=>document.documentElement.classList.remove('extension-dark-mode-preload'), 80);
@@ -160,7 +160,7 @@
             setSetting(`dark_mode_${domain}`, true);
         } else {
             document.documentElement.classList.remove('extension-dark-mode');
-            setSetting(`dark_mode_${domain}`, false);
+            setSetting(`dark_mode_${domain}`, true);
         }
         updateGUI();
         return true;
@@ -200,7 +200,7 @@
 
     const observeNavigation=()=>{
         const nd=location.hostname;
-        const en=getSetting(`dark_mode_${nd}`, false);
+        const en=getSetting(`dark_mode_${nd}`, true);
         if(en && !isAlreadyDark()) document.documentElement.classList.add('extension-dark-mode');
         else document.documentElement.classList.remove('extension-dark-mode');
     };
