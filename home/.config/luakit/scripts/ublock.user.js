@@ -4,7 +4,7 @@
 // @version      0.1.0
 // @description  Trimmed adblock - cosmetic + fetch/XHR blocking, cached lists
 // @match        *://*/*
-// @run-at       document-start
+// @run-at       document-end
 // @grant        GM_addStyle
 // @grant        GM_getValue
 // @grant        GM_setValue
@@ -56,7 +56,7 @@
                     // crude: if contains * or ^
                     if(pat.length < 3 || pat.length > 120) continue;
                     network.push(new RegExp(pat, 'i'));
-                    if(network.length > 5000) break; // trimmed cap
+                    if(network.length > 1000) break; // trimmed cap
                 } catch(e){}
             }
         }
@@ -66,7 +66,7 @@
     function injectCosmetic(cssList) {
         if(!cssList.length) return;
         // chunk to avoid huge style
-        const chunkSize = 800;
+        const chunkSize = 400;
         for(let i=0;i<cssList.length;i+=chunkSize) {
             const chunk = cssList.slice(i, i+chunkSize);
             const css = chunk.join(', ') + ' { display: none !important; }';
@@ -79,7 +79,10 @@
     }
 
     function shouldBlock(url, network) {
+        if(url && typeof url !== 'string' && url.toString) try{ url = url.toString(); }catch(e){ return false; }
+        if(typeof url !== 'string') try{ url = String(url); }catch(e){ return false; }
         if(!url || !network.length) return false;
+        if(url.startsWith('data:') || url.startsWith('luakit:') || url.startsWith('about:') || url.includes('favicon')) return false;
         // ignore same-origin? allow? For trimmed, block third-party only if list says
         for(const re of network) {
             if(re.test(url)) return true;
@@ -119,34 +122,9 @@
             } catch(e){}
             return origSend.apply(this, arguments);
         };
-        // Image/script src blocking via createElement
-        const origCreate = document.createElement;
-        document.createElement = function(tag) {
-            const el = origCreate.call(document, tag);
-            if(tag.toLowerCase() === 'img' || tag.toLowerCase() === 'script' || tag.toLowerCase() === 'iframe') {
-                const origSet = Object.getOwnPropertyDescriptor(HTMLImageElement.prototype, 'src')?.set;
-                // patch src setter per element
-                const patch = (elem) => {
-                    let _src='';
-                    Object.defineProperty(elem, 'src', {
-                        get(){ return _src; },
-                        set(v){
-                            if(shouldBlock(v, network)) { log('blocked element src', v); _src='about:blank'; return; }
-                            _src=v;
-                            if(origSet) origSet.call(elem, v); else elem.setAttribute('src', v);
-                        },
-                        configurable:true
-                    });
-                };
-                // only patch if needed, use setAttribute hook simpler
-                const origSetAttr = el.setAttribute;
-                el.setAttribute = function(n, v){
-                    if((n==='src' || n==='href') && shouldBlock(v, network)){ log('blocked setAttribute', v); return; }
-                    return origSetAttr.call(this, n, v);
-                };
-            }
-            return el;
-        };
+        // Image/script src blocking via createElement - disabled for luakit Trusted Types compat
+        // Hook disabled to prevent favicon/TrustedScriptURL breakage
+        // Network blocking still covers fetch/XHR, which is main vector
         log('network hooks installed', network.length);
     }
 
