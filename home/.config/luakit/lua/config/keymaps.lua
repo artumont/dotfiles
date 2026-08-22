@@ -70,4 +70,19 @@ return {
       w.view:eval_js("window.__darkmode_disable && window.__darkmode_disable()", { no_return = true })
     end,
   },
+
+  { "<leader>p.u", group = true, icon = "🛡", desc = "uBlock" },
+  {
+    "<leader>p.u.t",
+    icon = "🛡",
+    desc = "Toggle uBlock for site",
+    action = function(w) w.view:eval_js("(function(){ const d=location.hostname; const k='ublock_disabled_'+d; const cur=JSON.parse(localStorage.getItem(k)||'false'); const nxt=!cur; localStorage.setItem(k, JSON.stringify(nxt)); try{ const pk='ps:https://powerscripts.luakit/ublock:uBlock Lite (Powerscripts):'+k; localStorage.setItem(pk, JSON.stringify(nxt)); }catch(e){} location.reload(); })()", { no_return = true }) end,
+  },
+  {
+    "<leader>p.u.s",
+    icon = "📊",
+    desc = "uBlock stats",
+    action = function(w) w.view:eval_js("alert(JSON.stringify(window.__ublock_stats?window.__ublock_stats():{msg:'no stats'}))", { no_return = true }) end,
+  },
+
 }
