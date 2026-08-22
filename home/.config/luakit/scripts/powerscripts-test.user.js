@@ -3,7 +3,7 @@
 // @namespace   https://powerscripts.test
 // @version     1.0.0
 // @description Validates powerscripts framework APIs
-// @match       https://example.com/*
+// @match       https://www.google.com/*
 // @grant       GM_getValue
 // @grant       GM_setValue
 // @grant       GM_deleteValue
