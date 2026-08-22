@@ -28,18 +28,39 @@
 
     function loadDarkReader(cb) {
         if (window.DarkReader) return cb();
-        const s = document.createElement('script');
-        s.src = 'https://cdn.jsdelivr.net/npm/darkreader@4.9.96/darkreader.min.js';
-        s.async = false;
-        s.onload = cb;
-        s.onerror = () => {
-            // fallback: try unpkg
-            const s2 = document.createElement('script');
-            s2.src = 'https://unpkg.com/darkreader@4.9.96/darkreader.js';
-            s2.onload = cb;
-            (document.head||document.documentElement).appendChild(s2);
+        // Handle Trusted Types (YouTube) and CSP: use fetch+eval or TrustedScriptURL
+        const useTrusted = window.trustedTypes && trustedTypes.createPolicy;
+        const loadViaFetch = (url, next) => {
+            try {
+                // Try GM_xmlhttpRequest if available (powerscripts shim), else fetch
+                const fetcher = (typeof GM_xmlhttpRequest !== 'undefined') ? 
+                    (u, c) => GM_xmlhttpRequest({method:'GET', url:u, onload: r=>c(r.responseText)}) :
+                    (u, c) => fetch(u).then(r=>r.text()).then(c).catch(()=>next && next());
+                fetcher(url, (code) => {
+                    try { (0, eval)(code); cb(); } catch(e) { console.error('DarkReader eval failed', e); if(next) next(); }
+                });
+            } catch(e) { if(next) next(); }
         };
-        (document.head||document.documentElement).appendChild(s);
+        const url1 = 'https://cdn.jsdelivr.net/npm/darkreader@4.9.96/darkreader.min.js';
+        const url2 = 'https://unpkg.com/darkreader@4.9.96/darkreader.js';
+        // Try trusted script URL first, fallback to fetch
+        try {
+            const s = document.createElement('script');
+            let src = url1;
+            if (useTrusted) {
+                try {
+                    const policy = trustedTypes.createPolicy('darkreader', { createScriptURL: u => u });
+                    src = policy.createScriptURL(url1);
+                } catch(e) {}
+            }
+            s.src = src;
+            s.async = false;
+            s.onload = cb;
+            s.onerror = () => loadViaFetch(url1, () => loadViaFetch(url2, cb));
+            (document.head||document.documentElement).appendChild(s);
+        } catch(e) {
+            loadViaFetch(url1, () => loadViaFetch(url2, cb));
+        }
     }
 
     function applyForDomain() {
