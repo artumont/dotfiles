@@ -144,7 +144,7 @@
             meta.content='dark light';
             document.documentElement.style.colorScheme='dark';
             // preload bg immediately if enabled
-            if (getSetting(`dark_mode_${domain}`, true) && !isAlreadyDark()) {
+            if (getSetting(`dark_mode_${domain}`, true)) {
                 document.documentElement.classList.add('extension-dark-mode');
                 document.documentElement.classList.add('extension-dark-mode-preload');
                 setTimeout(()=>document.documentElement.classList.remove('extension-dark-mode-preload'), 80);
@@ -201,7 +201,7 @@
     const observeNavigation=()=>{
         const nd=location.hostname;
         const en=getSetting(`dark_mode_${nd}`, true);
-        if(en && !isAlreadyDark()) document.documentElement.classList.add('extension-dark-mode');
+        if(en) document.documentElement.classList.add('extension-dark-mode');
         else document.documentElement.classList.remove('extension-dark-mode');
     };
     addEventListener('popstate', observeNavigation);
