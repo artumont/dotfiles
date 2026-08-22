@@ -26,6 +26,9 @@
         if (!m) { m=document.createElement('meta'); m.name='color-scheme'; m.content='dark light'; (document.head||document.documentElement).appendChild(m); }
     } catch(e){}
 
+    // Fallback filter CSS if DarkReader blocked by CSP
+    const FALLBACK_CSS = `html{filter:invert(1) hue-rotate(180deg) brightness(0.97) contrast(1.02) !important;background:white !important} html img,html video,html iframe,html canvas,html svg{filter:invert(1) hue-rotate(180deg) !important}`;
+    function applyFallback(){ try{ if(typeof GM_addStyle!=='undefined') GM_addStyle(FALLBACK_CSS); else { const st=document.createElement('style'); st.textContent=FALLBACK_CSS; (document.head||document.documentElement).appendChild(st); } }catch(e){} }
     function loadDarkReader(cb) {
         if (window.DarkReader) return cb();
         // Handle Trusted Types (YouTube) and CSP: use fetch+eval or TrustedScriptURL
@@ -56,7 +59,7 @@
             s.src = src;
             s.async = false;
             s.onload = cb;
-            s.onerror = () => loadViaFetch(url1, () => loadViaFetch(url2, cb));
+            s.onerror = () => loadViaFetch(url1, () => loadViaFetch(url2, ()=>{ applyFallback(); cb(); }));
             (document.head||document.documentElement).appendChild(s);
         } catch(e) {
             loadViaFetch(url1, () => loadViaFetch(url2, cb));
@@ -80,6 +83,7 @@
         loadDarkReader(() => {
             try {
                 if (!window.DarkReader.isEnabled()) window.DarkReader.enable(DR_CONFIG);
+                if (!window.DarkReader.isEnabled()) applyFallback();
                 document.documentElement.setAttribute('data-darkreader-scheme','dark');
             } catch(e){ console.error('DarkReader enable failed', e); }
         });
