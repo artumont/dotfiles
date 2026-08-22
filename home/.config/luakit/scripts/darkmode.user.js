@@ -52,37 +52,38 @@
             --darkreader-selection-background: #264f78 !important;
             --darkreader-selection-text: #e8e6e3 !important;
         }
-        html.extension-dark-mode {
+        html.extension-dark-mode { background-color: white !important; color-scheme: dark !important; }
+        html.extension-dark-mode body {
              filter: invert(1) hue-rotate(180deg) brightness(0.97) contrast(1.02) !important;
              background-color: white !important;
-             color-scheme: dark !important;
         }
         html { transition: filter 0.25s ease; color-scheme: light dark; }
         html.extension-dark-mode-preload { background: #0f0f0f !important; color-scheme: dark !important; }
+        html.extension-dark-mode-preload body { background: #0f0f0f !important; }
 
         /* Re-invert media */
-        html.extension-dark-mode img,
-        html.extension-dark-mode video,
-        html.extension-dark-mode iframe,
-        html.extension-dark-mode canvas,
-        html.extension-dark-mode svg,
-        html.extension-dark-mode embed,
-        html.extension-dark-mode object {
+        html.extension-dark-mode body img,
+        html.extension-dark-mode body video,
+        html.extension-dark-mode body iframe,
+        html.extension-dark-mode body canvas,
+        html.extension-dark-mode body svg,
+        html.extension-dark-mode body embed,
+        html.extension-dark-mode body object {
              filter: invert(1) hue-rotate(180deg) brightness(0.97) contrast(1.02) !important;
         }
         /* DarkReader INVERT – common selectors that must stay light */
-        html.extension-dark-mode .jfk-bubble.gtx-bubble,
-        html.extension-dark-mode .captcheck_answer_label > input + img,
-        html.extension-dark-mode span#closed_text > img[src^="https://www.gstatic.com/images/branding/googlelogo"],
-        html.extension-dark-mode span[data-href^="https://www.hcaptcha.com/"] > #icon,
-        html.extension-dark-mode img.Wirisformula,
-        html.extension-dark-mode a[data-testid="headerMediumLogo"]>svg,
-        html.extension-dark-mode div[style*="background: rgb(255, 255, 255)"] {
+        html.extension-dark-mode body .jfk-bubble.gtx-bubble,
+        html.extension-dark-mode body .captcheck_answer_label > input + img,
+        html.extension-dark-mode body span#closed_text > img[src^="https://www.gstatic.com/images/branding/googlelogo"],
+        html.extension-dark-mode body span[data-href^="https://www.hcaptcha.com/"] > #icon,
+        html.extension-dark-mode body img.Wirisformula,
+        html.extension-dark-mode body a[data-testid="headerMediumLogo"]>svg,
+        html.extension-dark-mode body div[style*="background: rgb(255, 255, 255)"] {
              filter: invert(1) hue-rotate(180deg) !important;
         }
 
         /* DarkReader CSS fixes */
-        html.extension-dark-mode .jfk-bubble.gtx-bubble { background-color: white !important; }
+        html.extension-dark-mode body .jfk-bubble.gtx-bubble { background-color: white !important; }
         html.extension-dark-mode .vimvixen-hint {
             background-color: #ffd76e !important; border-color: #c59d00 !important; color: #302505 !important;
         }
@@ -97,9 +98,7 @@
         html.extension-dark-mode *[style*="color: rgb(0, 0, 1)"] { color: var(--darkreader-neutral-text) !important; }
 
         /* Exclusions: which-key Shadow host and any popup with ignore attr */
-        html.extension-dark-mode #-wk-root {
-             filter: invert(1) hue-rotate(180deg) brightness(0.97) contrast(1.02) !important;
-        }
+        html.extension-dark-mode #-wk-root { filter: none !important; }
         html.extension-dark-mode [data-darkmode-ignore],
         html.extension-dark-mode [data-powerscripts-ignore],
         html.extension-dark-mode [data-wk-ignore] {
