@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         DarkMode (Powerscripts)
 // @namespace    https://powerscripts.luakit/darkmode
-// @version      4.1.0
+// @version      4.1.1
 // @description  DarkReader-style dynamic dark mode - no flash, excludes popups
 // @match        *://*/*
 // @run-at       document-start
