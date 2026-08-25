@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "0.84.2",
+  "lastChangelogVersion": "0.84.3",
   "theme": "dark/dark",
   "defaultProvider": "opencode-go",
   "defaultModel": "muse-spark-1.2-contributor",
@@ -13,8 +13,7 @@
     "npm:pi-subagents",
     "npm:context-mode",
     "npm:pi-claude-code-tui",
-    "npm:pi-lens",
-    "npm:pi-effort"
+    "npm:pi-lens"
   ],
   "markdown": {
     "mermaid": "final"
