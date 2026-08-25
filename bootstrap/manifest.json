@@ -16,11 +16,6 @@
       "dest": "~/.config/wezterm"
     },
     {
-      "name": "Luakit",
-      "source": "home/.config/luakit",
-      "dest": "~/.config/luakit"
-    },
-    {
       "name": "EasyEffects",
       "source": "home/.config/easyeffects",
       "dest": "~/.config/easyeffects"

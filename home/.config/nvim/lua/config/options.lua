@@ -36,6 +36,13 @@ vim.diagnostic.config {
   },
 }
 
+vim.filetype.add {
+  extension = {
+    tf = "terraform",
+    tfvars = "terraform",
+  },
+}
+
 local width, height = getScreenResolution()
 if tonumber(width) == 2560 and tonumber(height) == 1440 then
   vim.g.neovide_scale_factor = 0.9

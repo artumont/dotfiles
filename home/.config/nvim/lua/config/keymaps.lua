@@ -142,5 +142,11 @@ end, { desc = "Insert section separator" })
 -- Paste mappings
 map("x", "p", [["_dP]], { desc = "Past without copy" })
 
+-- Markdown mappings
+
+map("n", "<leader>mp", "<cmd>MarkdownPreview<cr>", { desc = "Markdown: Start preview" })
+map("n", "<leader>mS", "<cmd>MarkdownPreviewStop<cr>", { desc = "Markdown: Stop preview" })
+map("n", "<leader>mr", "<cmd>MarkdownPreviewRefresh<cr>", { desc = "Markdown: Refresh preview" })
+
 -- Delete Mappings
 map("n", "<C-^>", "<Nop>")

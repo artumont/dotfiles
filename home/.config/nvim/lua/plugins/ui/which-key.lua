@@ -12,6 +12,7 @@ return {
       { "<leader>E", icon = "󰙅" },
       { "<leader>b", icon = "", desc = "Buffer Actions" },
       { "m", icon = "󰈮", desc = "Lsp Actions" },
+      { "<leader>m", icon = "", desc = "Markdown Actions" },
       { "<leader>x", icon = "", desc = "Trouble Actions" },
       { "<leader>g", icon = "", desc = "Git Actions" },
       { "<leader>a", icon = "", desc = "AgentSmith Actions" },

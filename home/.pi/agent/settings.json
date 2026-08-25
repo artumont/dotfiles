@@ -1,8 +1,8 @@
 {
-  "lastChangelogVersion": "0.84.1",
+  "lastChangelogVersion": "0.84.3",
   "theme": "dark/dark",
-  "defaultProvider": "opencode",
-  "defaultModel": "deepseek-v4-flash-free",
+  "defaultProvider": "opencode-go",
+  "defaultModel": "muse-spark-1.2-contributor",
   "defaultThinkingLevel": "high",
   "packages": [
     "npm:pi-mcp-adapter",
@@ -13,8 +13,7 @@
     "npm:pi-subagents",
     "npm:context-mode",
     "npm:pi-claude-code-tui",
-    "npm:pi-lens",
-    "npm:pi-effort"
+    "npm:pi-lens"
   ],
   "markdown": {
     "mermaid": "final"
