@@ -1,9 +1,6 @@
 require("lazy").setup {
   spec = {
-    { import = "plugins" },
-    { import = "plugins.mini" },
-    { import = "plugins.lsp" },
-    { import = "plugins.ui" },
+    { import = "plugins/core" },
     { import = "themes" },
   },
   install = { colorscheme = { "tokyonight" } },

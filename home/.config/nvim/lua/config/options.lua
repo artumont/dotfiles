@@ -1,31 +1,25 @@
----@return number width
----@return number height
-local function getScreenResolution()
-  local raw_res = vim.fn.system "xrandr | grep -w 'connected primary' | awk '{print $4}'"
+local opt = vim.opt
+local diagnostic = vim.diagnostic
 
-  local width, height = raw_res:match "(%d+)x(%d+)"
+-- Command bar
+opt.cmdheight = 0
 
-  return width, height
-end
+-- Clipboard
+opt.keymodel = "startsel,stopsel"
+opt.clipboard = "unnamedplus"
 
-vim.opt.cmdheight = 0
+-- Buffer
+opt.relativenumber = false
+opt.number = true
 
-vim.opt.keymodel = "startsel,stopsel"
-vim.opt.clipboard = "unnamedplus"
+opt.expandtab = true
+opt.shiftwidth = 2
+opt.tabstop = 2
 
-vim.opt.relativenumber = false
-vim.opt.number = true
+opt.autoread = true
 
-vim.opt.expandtab = true
-vim.opt.shiftwidth = 2
-vim.opt.tabstop = 2
-
-vim.opt.autoread = true
-vim.opt.wrap = false
-
-vim.o.splitbelow = true
-
-vim.diagnostic.config {
+-- Diagnostics
+diagnostic.config {
   signs = {
     text = {
       [vim.diagnostic.severity.ERROR] = "󰅚",
@@ -35,17 +29,3 @@ vim.diagnostic.config {
     },
   },
 }
-
-vim.filetype.add {
-  extension = {
-    tf = "terraform",
-    tfvars = "terraform",
-  },
-}
-
-local width, height = getScreenResolution()
-if tonumber(width) == 2560 and tonumber(height) == 1440 then
-  vim.g.neovide_scale_factor = 0.9
-else
-  vim.g.neovide_scale_factor = 0.8
-end

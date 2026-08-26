@@ -1,10 +1,3 @@
-vim.g.python_indent = {
-  closed_paren_align_last_line = false,
-  open_paren = "shiftwidth()",
-}
-vim.g.loaded_netrw = 1
-vim.g.loaded_netrwPlugin = 1
-
 -- bootstrap lazy.nvim
 local lazypath = vim.fn.stdpath "data" .. "/lazy/lazy.nvim"
 if not vim.uv.fs_stat(lazypath) then
@@ -23,8 +16,7 @@ vim.g.maplocalleader = ","
 
 vim.opt.rtp:prepend(lazypath)
 
+require "lazy_setup"
+require "config.autocmds"
 require "config.options"
 require "config.keymaps"
-require "config.autocmds"
-require "config.usercmds"
-require "lazy_setup"
