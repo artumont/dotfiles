@@ -6,6 +6,7 @@ package.path = os.getenv("HOME") .. "/.config/wezterm/lua/?.lua;" .. package.pat
 
 require("config.options").apply(config)
 require("config.keybinds").apply(config)
+require("config.hooks").apply()
 require("plugins.tabline").apply(config)
 
 -- tabline may override this; force native title bar last
