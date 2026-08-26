@@ -40,4 +40,7 @@ map("n", "<leader>gp", function() Snacks.picker.gh_pr { state = "all" } end, { d
 
 -- Buffer
 map("n", "<leader>bd", function() Snacks.bufdelete(0) end, { desc = "Delete current buffer" })
-map("n", "<leader>bD", function() Snacks.bufdelete.other() end, { desc = "Delete all other buffers" })
+map("n", "<leader>bD", function() Snacks.bufdelete.other() end, { desc = "Delete all other buffers" }) --
+
+-- Lsp Actions
+map("n", "ma", function() vim.lsp.buf.code_action() end, { desc = "Open code actions" })
