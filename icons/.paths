@@ -1,0 +1,15 @@
+# Icon categories in icons/
+# Each folder mirrors hicolor's structure.
+# Drop a 1024x1024+ PNG/SVG here, then use `manager.py → 4 → 1` to install.
+
+/apps            — application launchers
+/categories      — app category icons
+/devices         — hardware device icons
+/emblems         — overlay / badge icons
+/mimetypes       — file type association icons
+/panel           — panel / taskbar icons
+/status          — status indicator icons
+
+# Current icons:
+#   apps/neovim.svg   — Neovim logo (vector, 1024x1024)
+#   apps/neovim.png   — Neovim logo (raster, 1024x1024)
