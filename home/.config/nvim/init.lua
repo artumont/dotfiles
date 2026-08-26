@@ -1,3 +1,7 @@
+-- Disable netrw
+vim.g.loaded_netrw = 1
+vim.g.loaded_netrwPlugin = 1
+
 -- bootstrap lazy.nvim
 local lazypath = vim.fn.stdpath "data" .. "/lazy/lazy.nvim"
 if not vim.uv.fs_stat(lazypath) then

@@ -1,6 +1,10 @@
 local opt = vim.opt
 local diagnostic = vim.diagnostic
 
+-- Add mason bin to PATH so conform.nvim can find formatters
+local mason_bin = vim.fn.stdpath "data" .. "/mason/bin"
+vim.env.PATH = mason_bin .. ":" .. vim.env.PATH
+
 -- Command bar
 opt.cmdheight = 0
 
@@ -17,6 +21,7 @@ opt.shiftwidth = 2
 opt.tabstop = 2
 
 opt.autoread = true
+vim.opt.wrap = false
 
 -- Diagnostics
 diagnostic.config {
