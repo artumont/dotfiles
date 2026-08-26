@@ -3,6 +3,9 @@ local del = vim.keymap.set
 
 local function is_file_buffer(buf) return vim.bo[buf or 0].buftype == "" end
 
+-- Quick Navigation
+map("n", "R", function() Snacks.dashboard.pick "oldfiles" end, { desc = "Open recent files browser" })
+
 -- UI Toggles
 map("n", "<leader>ee", "<cmd>Neotree toggle<CR>", { desc = "Toggle file explorer" })
 map("n", "<leader>eg", "<cmd>Neotree git_status toggle right<CR>", { desc = "Toggle git explorer" })
@@ -24,12 +27,7 @@ map("n", "<leader>xx", "<cmd>Trouble diagnostics toggle filter.buf=0<CR>", { des
 map("n", "<leader>xg", "<cmd>Trouble diagnostics toggle<CR>", { desc = "Toggle global diagnostics" })
 
 -- File Manipulation
-map(
-  "n",
-  "<leader>w",
-  function() pcall(vim.api.nvim_command, "write") end,
-  { desc = "Save file", enabled = is_file_buffer }
-)
+map("n", "<leader>w", function() pcall(vim.api.nvim_command, "write") end, { desc = "Save file" })
 
 map("v", "<Tab>", ">gv", { noremap = true, silent = true, desc = "Indent selection", enabled = is_file_buffer })
 map("v", "<S-Tab>", "<gv", { noremap = true, silent = true, desc = "Dedent selection", enabled = is_file_buffer })

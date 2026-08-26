@@ -13,7 +13,35 @@ return {
       mappings = {
         ["<bs>"] = "noop",
         ["<space>"] = "noop",
+        ["<cr>"] = "smart_open",
+        ["o"] = "smart_open",
+        ["s"] = "smart_split",
+        ["v"] = "smart_vsplit",
+        ["<2-LeftMouse>"] = "noop",
       },
+    },
+    commands = {
+      smart_pick = function(state, picker_cmd, fallback_cmd)
+        local win_count = 0
+        for _, winid in ipairs(vim.api.nvim_list_wins()) do
+          local cfg = vim.api.nvim_win_get_config(winid)
+          local buf = vim.api.nvim_win_get_buf(winid)
+          local ft = vim.bo[buf].filetype
+
+          if cfg.relative == "" and not ft:match "^neo%-tree" then win_count = win_count + 1 end
+        end
+
+        if win_count <= 1 then
+          state.commands[fallback_cmd](state)
+        else
+          local ok = pcall(state.commands[picker_cmd], state)
+          if not ok then state.commands[fallback_cmd](state) end
+        end
+      end,
+
+      smart_open = function(state) state.commands.smart_pick(state, "open_with_window_picker", "open") end,
+      smart_split = function(state) state.commands.smart_pick(state, "split_with_window_picker", "split") end,
+      smart_vsplit = function(state) state.commands.smart_pick(state, "vsplit_with_window_picker", "vsplit") end,
     },
     filesystem = {
       use_libuv_file_watcher = true,

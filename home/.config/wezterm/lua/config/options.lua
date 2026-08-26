@@ -6,7 +6,20 @@ function M.apply(config)
 	config.font = wezterm.font_with_fallback({
 		{
 			family = "Monaspace Neon Var",
-			harfbuzz_features = { "calt", "ss01", "ss02", "ss03", "ss04", "ss05", "ss06", "ss07", "ss08", "ss09", "ss10", "liga" },
+			harfbuzz_features = {
+				"calt",
+				"ss01",
+				"ss02",
+				"ss03",
+				"ss04",
+				"ss05",
+				"ss06",
+				"ss07",
+				"ss08",
+				"ss09",
+				"ss10",
+				"liga",
+			},
 		},
 		"Symbols Nerd Font",
 	})
@@ -27,6 +40,8 @@ function M.apply(config)
 	config.enable_tab_bar = true
 	config.show_tabs_in_tab_bar = true
 	config.show_new_tab_button_in_tab_bar = false
+
+	config.term = "wezterm"
 
 	config.mouse_bindings = {
 		{
