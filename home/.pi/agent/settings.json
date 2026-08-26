@@ -2,7 +2,7 @@
   "lastChangelogVersion": "0.84.3",
   "theme": "dark/dark",
   "defaultProvider": "opencode-go",
-  "defaultModel": "",
+  "defaultModel": "mimo-v2.5",
   "defaultThinkingLevel": "high",
   "packages": [
     "npm:pi-mcp-adapter",
