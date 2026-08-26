@@ -12,6 +12,7 @@ return {
       { "<leader>e", icon = "󰙅", desc = "Neotree Actions" },
       { "<leader>g", icon = "", desc = "Git Actions" },
       { "<leader>x", icon = "", desc = "Trouble Actions" },
+      { "<leader>b", icon = "", desc = "Buffer Actions" },
     },
   },
 }

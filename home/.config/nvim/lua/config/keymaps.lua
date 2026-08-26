@@ -37,3 +37,7 @@ map("v", "<S-Tab>", "<gv", { noremap = true, silent = true, desc = "Dedent selec
 -- Git
 map("n", "<leader>gi", function() Snacks.picker.gh_issue { state = "all" } end, { desc = "Open Github Issues" })
 map("n", "<leader>gp", function() Snacks.picker.gh_pr { state = "all" } end, { desc = "Open Github Pull Requests" })
+
+-- Buffer
+map("n", "<leader>bd", function() Snacks.bufdelete(0) end, { desc = "Delete current buffer" })
+map("n", "<leader>bD", function() Snacks.bufdelete.other() end, { desc = "Delete all other buffers" })
