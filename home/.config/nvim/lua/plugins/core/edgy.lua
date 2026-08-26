@@ -21,7 +21,17 @@ return {
         filter = function(buf) return vim.api.nvim_buf_get_name(buf):match "neo%-tree filesystem" ~= nil end,
         pinned = true,
         size = { height = 1.0, width = 0.13 },
-        open = "Neotree filesystem",
+        open = "Neotree filesystem left",
+      },
+    },
+    right = {
+      {
+        title = "Git",
+        ft = "neo-tree-git",
+        filter = function(buf) return vim.api.nvim_buf_get_name(buf):match "neo%-tree git_status" ~= nil end,
+        pinned = true,
+        size = { height = 1.0, width = 0.13 },
+        open = "Neotree git_status right",
       },
     },
   },

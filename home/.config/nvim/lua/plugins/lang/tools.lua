@@ -7,5 +7,6 @@ return {
     "proselint",
     "tree-sitter-cli",
     "pyproject-fmt",
+    "shfmt",
   },
 }

@@ -20,6 +20,7 @@ return {
       hijack_netrw_behavior = "disabled",
       filtered_items = {
         show_hidden_count = false,
+        hide_dotfiles = false,
         hide_by_name = {
           ".DS_Store",
           "thumbs.db",
