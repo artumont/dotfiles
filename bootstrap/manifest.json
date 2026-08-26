@@ -6,11 +6,6 @@
       "dest": "~/.config/nvim"
     },
     {
-      "name": "Neovide",
-      "source": "home/.config/neovide",
-      "dest": "~/.config/neovide"
-    },
-    {
       "name": "WezTerm",
       "source": "home/.config/wezterm",
       "dest": "~/.config/wezterm"
@@ -34,6 +29,21 @@
       "name": "Pi skills",
       "source": "home/.pi/agent/skills",
       "dest": "~/.pi/agent/skills"
+    },
+    {
+      "name": "Service Menus",
+      "source": "home/.local/share/kio/servicemenus",
+      "dest": "~/.local/share/kio/servicemenus"
+    },
+    {
+      "name": "Neovim Desktop File",
+      "source": "home/.local/share/applications/Neovim.desktop",
+      "dest": "~/.local/share/applications/Neovim.desktop"
+    },
+    {
+      "name": "KIO Config",
+      "source": "home/.local/share/kio",
+      "dest": "~/.local/share/kio"
     }
   ]
 }
