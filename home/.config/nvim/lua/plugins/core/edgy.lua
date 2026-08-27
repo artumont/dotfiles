@@ -9,6 +9,11 @@ return {
     vim.opt.splitkeep = "screen"
   end,
   opts = {
+    options = {
+      bufferline = {
+        integration = true,
+      },
+    },
     wo = {
       winbar = true,
     },
@@ -27,7 +32,7 @@ return {
     right = {
       {
         title = "Git",
-        ft = "neo-tree-git",
+        ft = "neo-tree",
         filter = function(buf) return vim.api.nvim_buf_get_name(buf):match "neo%-tree git_status" ~= nil end,
         pinned = true,
         size = { height = 1.0, width = 0.13 },

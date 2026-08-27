@@ -15,8 +15,6 @@ return {
         ["<space>"] = "noop",
         ["<cr>"] = "smart_open",
         ["o"] = "smart_open",
-        ["s"] = "smart_split",
-        ["v"] = "smart_vsplit",
         ["<2-LeftMouse>"] = "noop",
       },
     },
@@ -40,8 +38,6 @@ return {
       end,
 
       smart_open = function(state) state.commands.smart_pick(state, "open_with_window_picker", "open") end,
-      smart_split = function(state) state.commands.smart_pick(state, "split_with_window_picker", "split") end,
-      smart_vsplit = function(state) state.commands.smart_pick(state, "vsplit_with_window_picker", "vsplit") end,
     },
     filesystem = {
       use_libuv_file_watcher = true,
