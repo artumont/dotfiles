@@ -15,7 +15,7 @@ return {
         ["<space>"] = "noop",
         ["<cr>"] = "smart_open",
         ["o"] = "smart_open",
-        ["<2-LeftMouse>"] = "noop",
+        ["<2-LeftMouse>"] = "smart_open",
       },
     },
     commands = {
