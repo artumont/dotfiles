@@ -15,20 +15,8 @@ map({ "n", "x" }, "<leader>sw", function() Snacks.picker.grep_word() end, { desc
 -- UI Toggles
 map("n", "<leader>ee", "<cmd>Neotree toggle<CR>", { desc = "Toggle file explorer" })
 map("n", "<leader>eg", "<cmd>Neotree git_status toggle right<CR>", { desc = "Toggle git explorer" })
-map("n", "<leader>gg", function()
-  Snacks.lazygit {
-    win = {
-      keys = {
-        term_normal = {
-          "<Esc><Esc>",
-          function(self) self:close() end,
-          mode = "t",
-          desc = "Close LazyGit",
-        },
-      },
-    },
-  }
-end, { desc = "Open LazyGit" })
+map("n", "<leader>gg", function() Snacks.lazygit() end, { desc = "Open LazyGit" })
+map("n", "<leader>dd", function() Snacks.terminal "lazydocker" end, { desc = "Open LazyDocker" })
 map("n", "<leader>xx", "<cmd>Trouble diagnostics toggle filter.buf=0<CR>", { desc = "Toggle buffer diagnostics" })
 map("n", "<leader>xg", "<cmd>Trouble diagnostics toggle<CR>", { desc = "Toggle global diagnostics" })
 
