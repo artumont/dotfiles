@@ -45,6 +45,7 @@ return {
       filtered_items = {
         show_hidden_count = false,
         hide_dotfiles = false,
+        hide_gitignored = false,
         hide_by_name = {
           ".DS_Store",
           "thumbs.db",
