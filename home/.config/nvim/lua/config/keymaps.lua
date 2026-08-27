@@ -61,3 +61,6 @@ map("n", "gai", function() Snacks.picker.lsp_incoming_calls() end, { desc = "C[a
 map("n", "gao", function() Snacks.picker.lsp_outgoing_calls() end, { desc = "C[a]lls Outgoing" })
 map("n", "<leader>ss", function() Snacks.picker.lsp_symbols() end, { desc = "LSP Symbols" })
 map("n", "<leader>sS", function() Snacks.picker.lsp_workspace_symbols() end, { desc = "LSP Workspace Symbols" })
+
+-- Terminal Navigation
+map("t", "<Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
