@@ -26,7 +26,7 @@ return {
           for _, pos in ipairs { "left", "right" } do
             local sb = layout[pos]
             if sb and #sb.wins > 0 then
-              local title = "        " .. string.rep(" ", sb.bounds.width - 8)
+              local title = "       " .. string.rep(" ", sb.bounds.width - 8)
               ret[pos] = "%#EdgyTitle#" .. title .. "%*" .. "%#WinSeparator#│%*"
               ret[pos .. "_size"] = sb.bounds.width
             end
