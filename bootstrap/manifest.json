@@ -44,6 +44,11 @@
       "name": "KIO Config",
       "source": "home/.local/share/kio",
       "dest": "~/.local/share/kio"
+    },
+    {
+      "name": "Wallpapers",
+      "source": "wallpapers",
+      "dest": "~/Videos/Wallpapers"
     }
   ]
 }
