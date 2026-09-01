@@ -16,7 +16,7 @@ map({ "n", "x" }, "<leader>sw", function() Snacks.picker.grep_word() end, { desc
 map("n", "<leader>ee", "<cmd>Neotree toggle<CR>", { desc = "Toggle file explorer" })
 map("n", "<leader>eg", "<cmd>Neotree git_status toggle right<CR>", { desc = "Toggle git explorer" })
 map("n", "<leader>gg", function() Snacks.lazygit() end, { desc = "Open LazyGit" })
-map("n", "<leader>dd", function() Snacks.terminal "lazydocker" end, { desc = "Open LazyDocker" })
+map("n", "<leader>kk", function() Snacks.terminal "lazydocker" end, { desc = "Open LazyDocker" })
 map("n", "<leader>xx", "<cmd>Trouble diagnostics toggle filter.buf=0<CR>", { desc = "Toggle buffer diagnostics" })
 map("n", "<leader>xg", "<cmd>Trouble diagnostics toggle<CR>", { desc = "Toggle global diagnostics" })
 
@@ -66,3 +66,46 @@ map("n", "<leader>---", function()
     end
   end)
 end, { desc = "Insert section separator" })
+
+-- Vimspector Debug (global)
+map("n", "<leader>dd", "<Plug>VimspectorLaunch", { desc = "Start Debugging", remap = true })
+map("n", "<leader>de", "<Plug>VimspectorReset", { desc = "Stop Debugging", remap = true })
+map("n", "<leader>db", "<Plug>VimspectorToggleBreakpoint", { desc = "Toggle Breakpoint", remap = true })
+
+-- Vimspector Debug (single-key, active only during session)
+local debug_maps = {
+  { "c", "<Plug>VimspectorContinue", "Continue" },
+  { "n", "<Plug>VimspectorStepOver", "Step Over" },
+  { "i", "<Plug>VimspectorStepInto", "Step Into" },
+  { "o", "<Plug>VimspectorStepOut", "Step Out" },
+}
+
+local function set_debug_keymaps(bufnr)
+  for _, m in ipairs(debug_maps) do
+    vim.keymap.set("n", m[1], m[2], {
+      buffer = bufnr, remap = true, silent = true, desc = m[3] .. " (debug)",
+    })
+  end
+end
+
+local function del_debug_keymaps(bufnr)
+  for _, m in ipairs(debug_maps) do
+    pcall(vim.keymap.del, "n", m[1], { buffer = bufnr })
+  end
+end
+
+vim.api.nvim_create_autocmd("User", {
+  pattern = "VimspectorUICreated",
+  callback = function(args)
+    set_debug_keymaps(args.buf)
+  end,
+  desc = "Set single-key debug maps on source buffer",
+})
+
+vim.api.nvim_create_autocmd("User", {
+  pattern = "VimspectorDebugEnded",
+  callback = function(args)
+    del_debug_keymaps(args.buf)
+  end,
+  desc = "Remove single-key debug maps from source buffer",
+})
