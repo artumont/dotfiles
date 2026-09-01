@@ -52,3 +52,17 @@ map("n", "<leader>sS", function() Snacks.picker.lsp_workspace_symbols() end, { d
 
 -- Terminal Navigation
 map("t", "<Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
+
+-- Divider
+map("n", "<leader>---", function()
+  vim.ui.input({ prompt = "Section title: " }, function(title)
+    if title then
+      local sep = require "utils.separator"
+      local full_title = title ~= "" and title or "Section"
+      local line = sep.make_separator(full_title)
+      local row = vim.api.nvim_win_get_cursor(0)[1]
+      vim.api.nvim_buf_set_lines(0, row, row, false, { line })
+      vim.api.nvim_win_set_cursor(0, { row + 1, #line })
+    end
+  end)
+end, { desc = "Insert section separator" })
