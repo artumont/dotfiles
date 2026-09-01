@@ -72,40 +72,8 @@ map("n", "<leader>dd", "<Plug>VimspectorLaunch", { desc = "Start Debugging", rem
 map("n", "<leader>de", "<Plug>VimspectorReset", { desc = "Stop Debugging", remap = true })
 map("n", "<leader>db", "<Plug>VimspectorToggleBreakpoint", { desc = "Toggle Breakpoint", remap = true })
 
--- Vimspector Debug (single-key, active only during session)
-local debug_maps = {
-  { "c", "<Plug>VimspectorContinue", "Continue" },
-  { "n", "<Plug>VimspectorStepOver", "Step Over" },
-  { "i", "<Plug>VimspectorStepInto", "Step Into" },
-  { "o", "<Plug>VimspectorStepOut", "Step Out" },
-}
-
-local function set_debug_keymaps(bufnr)
-  for _, m in ipairs(debug_maps) do
-    vim.keymap.set("n", m[1], m[2], {
-      buffer = bufnr, remap = true, silent = true, desc = m[3] .. " (debug)",
-    })
-  end
-end
-
-local function del_debug_keymaps(bufnr)
-  for _, m in ipairs(debug_maps) do
-    pcall(vim.keymap.del, "n", m[1], { buffer = bufnr })
-  end
-end
-
-vim.api.nvim_create_autocmd("User", {
-  pattern = "VimspectorUICreated",
-  callback = function(args)
-    set_debug_keymaps(args.buf)
-  end,
-  desc = "Set single-key debug maps on source buffer",
-})
-
-vim.api.nvim_create_autocmd("User", {
-  pattern = "VimspectorDebugEnded",
-  callback = function(args)
-    del_debug_keymaps(args.buf)
-  end,
-  desc = "Remove single-key debug maps from source buffer",
-})
+-- Vimspector Debug (session-scoped)
+map("n", "<leader>dc", "<Plug>VimspectorContinue", { desc = "Continue (debug)", remap = true })
+map("n", "<leader>dn", "<Plug>VimspectorStepOver", { desc = "Step Over (debug)", remap = true })
+map("n", "<leader>di", "<Plug>VimspectorStepInto", { desc = "Step Into (debug)", remap = true })
+map("n", "<leader>do", "<Plug>VimspectorStepOut", { desc = "Step Out (debug)", remap = true })
