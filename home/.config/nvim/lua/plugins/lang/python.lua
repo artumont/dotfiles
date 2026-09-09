@@ -18,6 +18,5 @@ return {
     },
   },
 
-  mason = { "basedpyright", "ruff", "debugpy" },
-  filetypes = { "python" },
+  mason = { "basedpyright", "ruff", "debugpy", "pyproject-fmt" },
 }

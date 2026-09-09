@@ -22,5 +22,4 @@ return {
     "gomodifytags",
     "gotests",
   },
-  filetypes = { "go", "gomod", "gowork", "gosum" },
 }
