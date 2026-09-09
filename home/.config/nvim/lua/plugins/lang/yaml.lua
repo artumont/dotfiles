@@ -10,4 +10,5 @@ return {
   },
 
   mason = { "yaml-language-server" },
+  filetypes = { "yaml" },
 }

@@ -4,4 +4,5 @@ return {
   },
 
   mason = { "marksman", "markdownlint" },
+  filetypes = { "markdown", "markdown.mdx" },
 }

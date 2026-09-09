@@ -15,4 +15,5 @@ return {
   },
 
   mason = { "lua-language-server", "selene", "stylua" },
+  filetypes = { "lua" },
 }

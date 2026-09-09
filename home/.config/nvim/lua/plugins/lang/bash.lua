@@ -4,4 +4,5 @@ return {
   },
 
   mason = { "bash-language-server" },
+  filetypes = { "bash", "sh" },
 }

@@ -12,40 +12,70 @@ end
 -- Merge all servers and mason packages
 local servers = {}
 local mason_lsp_servers = {} -- only lspconfig server names
-local mason_tools = {} -- non-lsp mason packages
 for _, mod in ipairs(lang_modules) do
   for server, cfg in pairs(mod.servers or {}) do
     servers[server] = cfg
     table.insert(mason_lsp_servers, server)
   end
-  for _, pkg in ipairs(mod.mason or {}) do
-    table.insert(mason_tools, pkg)
-  end
 end
 
--- Remove LSP servers from tools list (they go through mason-lspconfig)
+-- Build LSP server set for filtering
 local lsp_set = {}
 for _, s in ipairs(mason_lsp_servers) do
   lsp_set[s] = true
 end
-local filtered_tools = {}
-for _, pkg in ipairs(mason_tools) do
-  if not lsp_set[pkg] then table.insert(filtered_tools, pkg) end
+
+-- Split non-LSP mason tools into:
+--   generic_tools: modules with no filetypes → install on start
+--   filetype_tools: modules with filetypes → install lazily on FileType
+local generic_tools = {}
+local filetype_tools = {} -- ft -> { pkg, ... }
+
+for _, mod in ipairs(lang_modules) do
+  local non_lsp = {}
+  for _, pkg in ipairs(mod.mason or {}) do
+    if not lsp_set[pkg] then table.insert(non_lsp, pkg) end
+  end
+
+  if mod.filetypes and #non_lsp > 0 then
+    for _, ft in ipairs(mod.filetypes) do
+      if not filetype_tools[ft] then filetype_tools[ft] = {} end
+      for _, pkg in ipairs(non_lsp) do
+        table.insert(filetype_tools[ft], pkg)
+      end
+    end
+  else
+    for _, pkg in ipairs(non_lsp) do
+      table.insert(generic_tools, pkg)
+    end
+  end
 end
 
 table.sort(mason_lsp_servers)
-table.sort(filtered_tools)
+table.sort(generic_tools)
 
 return {
   {
     "mason-org/mason.nvim",
+    cmd = "Mason",
+    event = "VeryLazy",
+    opts = {},
+  },
+  {
+    "WhoIsSethDaniel/mason-tool-installer.nvim",
+    dependencies = { "mason-org/mason.nvim" },
+    cmd = { "MasonToolInstallerInstall", "MasonToolInstallerUpdate" },
+    event = "VeryLazy",
     opts = {
-      ensure_installed = filtered_tools,
+      ensure_installed = generic_tools,
+      auto_update = false,
+      run_on_start = #generic_tools > 0,
     },
   },
   {
     "mason-org/mason-lspconfig.nvim",
     dependencies = { "mason-org/mason.nvim", "neovim/nvim-lspconfig" },
+    event = "VeryLazy",
     opts = {
       ensure_installed = mason_lsp_servers,
       automatic_enable = false,
@@ -53,7 +83,7 @@ return {
   },
   {
     "neovim/nvim-lspconfig",
-    dependencies = { "mason-org/mason-lspconfig.nvim" },
+    event = "VeryLazy",
     config = function()
       local ok, blink = pcall(require, "blink.cmp")
       local cap = ok and blink.get_lsp_capabilities() or vim.lsp.protocol.make_client_capabilities()
@@ -67,6 +97,29 @@ return {
       end
 
       vim.lsp.enable(enabled)
+
+      -- Lazy-install non-LSP mason tools per filetype
+      local augroup = vim.api.nvim_create_augroup("MasonLazyInstall", { clear = true })
+      for ft, tools in pairs(filetype_tools) do
+        vim.api.nvim_create_autocmd("FileType", {
+          group = augroup,
+          pattern = ft,
+          once = true,
+          callback = function()
+            local reg_ok, registry = pcall(require, "mason-registry")
+            if not reg_ok then return end
+            local missing = {}
+            for _, pkg in ipairs(tools) do
+              if not registry.is_installed(pkg) then
+                table.insert(missing, pkg)
+              end
+            end
+            if #missing > 0 then
+              vim.cmd("MasonToolInstall " .. table.concat(missing, ","))
+            end
+          end,
+        })
+      end
     end,
   },
 }

@@ -4,4 +4,5 @@ return {
   },
 
   mason = { "json-lsp" },
+  filetypes = { "json", "jsonc" },
 }
