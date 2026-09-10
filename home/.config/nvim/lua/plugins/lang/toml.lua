@@ -1,5 +1,0 @@
-return {
-  servers = {},
-
-  mason = { "tombi" },
-}

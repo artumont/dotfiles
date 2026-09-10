@@ -11,7 +11,6 @@ return {
   opts = {
     window = {
       mappings = {
-        ["<bs>"] = "noop",
         ["<space>"] = "noop",
         ["<cr>"] = "smart_open",
         ["o"] = "smart_open",

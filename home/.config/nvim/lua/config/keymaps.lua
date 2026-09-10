@@ -7,7 +7,7 @@ local function is_file_buffer(buf) return vim.bo[buf or 0].buftype == "" end
 map("n", "R", function() Snacks.picker.recent() end, { desc = "Open recent files browser" })
 
 -- Search
-map("n", "<leader>sb", function() Snacks.picker.lines() end, { desc = "Buffer Lines" })
+map("n", "<leader>ss", function() Snacks.picker.lines() end, { desc = "Buffer Lines" })
 map("n", "<leader>sB", function() Snacks.picker.grep_buffers() end, { desc = "Grep Open Buffers" })
 map("n", "<leader>sg", function() Snacks.picker.grep() end, { desc = "Grep" })
 map({ "n", "x" }, "<leader>sw", function() Snacks.picker.grep_word() end, { desc = "Visual selection or word" })
@@ -47,8 +47,7 @@ map("n", "gd", function() Snacks.picker.lsp_definitions() end, { desc = "Goto De
 map("n", "gD", function() Snacks.picker.lsp_declarations() end, { desc = "Goto Declaration" })
 map("n", "gI", function() Snacks.picker.lsp_implementations() end, { desc = "Goto Implementation" })
 map("n", "gy", function() Snacks.picker.lsp_type_definitions() end, { desc = "Goto T[y]pe Definition" })
-map("n", "<leader>ss", function() Snacks.picker.lsp_symbols() end, { desc = "LSP Symbols" })
-map("n", "<leader>sS", function() Snacks.picker.lsp_workspace_symbols() end, { desc = "LSP Workspace Symbols" })
+map("n", "<leader>ms", function() Snacks.picker.lsp_symbols() end, { desc = "LSP Symbols" })
 
 -- Terminal Navigation
 map("t", "<Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" })

@@ -61,9 +61,7 @@ function M.install_lang(lang)
   local missing = {}
   for _, pkg_name in ipairs(lang.mason) do
     local ok_pkg, pkg = pcall(registry.get_package, pkg_name)
-    if ok_pkg and pkg and not pkg:is_installed() then
-      table.insert(missing, pkg_name)
-    end
+    if ok_pkg and pkg and not pkg:is_installed() then table.insert(missing, pkg_name) end
   end
 
   if #missing == 0 then
@@ -79,10 +77,15 @@ function M.install_lang(lang)
     for name, cfg in pairs(lang.lsp) do
       vim.lsp.config(name, cfg)
     end
-    vim.lsp.enable(vim.tbl_keys(lang.lsp))
+
+    -- Enable the language servers globally
+    local server_names = vim.tbl_keys(lang.lsp)
+    vim.lsp.enable(server_names)
+
+    -- Safely trigger Neovim to re-evaluate and attach the servers to open buffers
     for _, buf in ipairs(vim.api.nvim_list_bufs()) do
-      if vim.bo[buf].buftype == "" and vim.api.nvim_buf_is_loaded(buf) then
-        vim.lsp.buf_attach_client(buf, nil)
+      if vim.api.nvim_buf_is_loaded(buf) and vim.bo[buf].buftype == "" then
+        vim.api.nvim_exec_autocmds("FileType", { buf = buf })
       end
     end
   end
@@ -105,9 +108,7 @@ function M.uninstall_lang(lang)
   local installed = {}
   for _, pkg_name in ipairs(lang.mason) do
     local ok_pkg, pkg = pcall(registry.get_package, pkg_name)
-    if ok_pkg and pkg and pkg:is_installed() then
-      table.insert(installed, pkg_name)
-    end
+    if ok_pkg and pkg and pkg:is_installed() then table.insert(installed, pkg_name) end
   end
 
   if #installed == 0 then
