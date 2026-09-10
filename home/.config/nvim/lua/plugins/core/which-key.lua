@@ -16,6 +16,7 @@ return {
       { "<leader>b", icon = "", desc = "Buffer Actions" },
       { "<leader>s", icon = "", desc = "Search Methods" },
       { "<leader>k", icon = "", desc = "Docker Actions" },
+      { "<leader>t", icon = "", desc = "Terminal Actions" },
     },
   },
 }

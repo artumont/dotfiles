@@ -23,6 +23,8 @@ opt.tabstop = 2
 opt.autoread = true
 vim.opt.wrap = false
 
+vim.opt.mousescroll = "ver:2,hor:2"
+
 -- Diagnostics
 diagnostic.config {
   virtual_text = true,

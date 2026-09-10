@@ -39,6 +39,18 @@ return {
         open = "Neotree git_status right",
       },
     },
+    bottom = {
+      {
+        ft = "snacks_terminal",
+        size = { height = 0.3 },
+        title = "%{b:snacks_terminal.id}: %{b:term_title}",
+        filter = function(buf, win)
+          return vim.w[win].snacks_win
+            and vim.w[win].snacks_win.position == "bottom"
+            and vim.w[win].snacks_win.relative == "editor"
+        end,
+      },
+    },
   },
   filter = function(buf, win)
     local ft = vim.bo[buf].filetype

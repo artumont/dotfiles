@@ -19,6 +19,13 @@ map("n", "<leader>gg", function() Snacks.lazygit() end, { desc = "Open LazyGit" 
 map("n", "<leader>kk", function() Snacks.terminal "lazydocker" end, { desc = "Open LazyDocker" })
 map("n", "<leader>xx", "<cmd>Trouble diagnostics toggle filter.buf=0<CR>", { desc = "Toggle buffer diagnostics" })
 map("n", "<leader>xg", "<cmd>Trouble diagnostics toggle<CR>", { desc = "Toggle global diagnostics" })
+map(
+  "n",
+  "<leader>tf",
+  function() Snacks.terminal("bash", { win = { position = "float" } }) end,
+  { desc = "Open floating terminal window" }
+)
+map("n", "<leader>tt", function() Snacks.terminal() end, { desc = "Open terminal split" })
 
 -- File Manipulation
 map("n", "<leader>w", function() pcall(vim.api.nvim_command, "write") end, { desc = "Save file" })
@@ -47,7 +54,7 @@ map("n", "gd", function() Snacks.picker.lsp_definitions() end, { desc = "Goto De
 map("n", "gD", function() Snacks.picker.lsp_declarations() end, { desc = "Goto Declaration" })
 map("n", "gI", function() Snacks.picker.lsp_implementations() end, { desc = "Goto Implementation" })
 map("n", "gy", function() Snacks.picker.lsp_type_definitions() end, { desc = "Goto T[y]pe Definition" })
-map("n", "<leader>ms", function() Snacks.picker.lsp_symbols() end, { desc = "LSP Symbols" })
+map("n", "ms", function() Snacks.picker.lsp_symbols() end, { desc = "LSP Symbols" })
 
 -- Terminal Navigation
 map("t", "<Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
