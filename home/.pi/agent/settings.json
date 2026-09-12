@@ -12,7 +12,6 @@
     "npm:pi-claude-code-tui",
     "npm:pi-subagents",
     "npm:pi-lens",
-    "npm:pi-goal-x",
     "npm:context-mode",
     "npm:@the-agency/pi-spec-kit",
     "npm:@juicesharp/rpiv-todo",
