@@ -11,6 +11,7 @@ map("n", "<leader>ss", function() Snacks.picker.lines() end, { desc = "Buffer Li
 map("n", "<leader>sB", function() Snacks.picker.grep_buffers() end, { desc = "Grep Open Buffers" })
 map("n", "<leader>sg", function() Snacks.picker.grep() end, { desc = "Grep" })
 map({ "n", "x" }, "<leader>sw", function() Snacks.picker.grep_word() end, { desc = "Visual selection or word" })
+map("n", "<leader>sr", "<cmd>GrugFar<CR>", { desc = "Search and Replace" })
 
 -- UI Toggles
 map("n", "<leader>ee", "<cmd>Neotree toggle<CR>", { desc = "Toggle file explorer" })

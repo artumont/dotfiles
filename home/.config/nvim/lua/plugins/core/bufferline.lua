@@ -1,5 +1,9 @@
 -- Bufferline
 
+local excluded_filetypes = {
+  "grug-far",
+}
+
 return {
   "akinsho/bufferline.nvim",
   event = "VeryLazy",
@@ -12,6 +16,13 @@ return {
         local ok, mini = pcall(require, "mini.icons")
         if not ok then return end
         return mini.get("filetype", element.filetype)
+      end,
+      custom_filter = function(buf_number)
+        local ft = vim.bo[buf_number].filetype
+        for _, excluded in ipairs(excluded_filetypes) do
+          if ft == excluded then return false end
+        end
+        return true
       end,
     },
   },
