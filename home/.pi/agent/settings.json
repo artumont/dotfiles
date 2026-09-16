@@ -10,12 +10,12 @@
     "npm:pi-agentsmd",
     "npm:pi-web-access",
     "npm:pi-claude-code-tui",
-    "npm:pi-subagents",
     "npm:pi-lens",
     "npm:context-mode",
     "npm:@the-agency/pi-spec-kit",
     "npm:@juicesharp/rpiv-todo",
-    "npm:@juicesharp/rpiv-ask-user-question"
+    "npm:@juicesharp/rpiv-ask-user-question",
+    "npm:pi-better-subagents"
   ],
   "markdown": {
     "mermaid": "final"
