@@ -15,7 +15,7 @@
     "npm:@the-agency/pi-spec-kit",
     "npm:@juicesharp/rpiv-todo",
     "npm:@juicesharp/rpiv-ask-user-question",
-    "npm:pi-better-subagents"
+    "npm:pi-subagents"
   ],
   "markdown": {
     "mermaid": "final"
