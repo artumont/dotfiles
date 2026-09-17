@@ -2,7 +2,7 @@
   "lastChangelogVersion": "0.85.1",
   "theme": "dark/dark",
   "defaultProvider": "opencode-go",
-  "defaultModel": "mimo-v2.5",
+  "defaultModel": "deepseek-v4.1-flash",
   "defaultThinkingLevel": "high",
   "packages": [
     "npm:pi-mcp-adapter",
