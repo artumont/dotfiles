@@ -6,6 +6,16 @@
       "url": "http://127.0.0.1:13337/mcp",
       "lifecycle": "lazy",
       "enabled": true
+    },
+    "obsidian": {
+      "type": "remote",
+      "transport": "streamable-http",
+      "url": "http://127.0.0.1:27123/mcp",
+      "lifecycle": "lazy",
+      "headers": {
+        "Authorization": "Bearer local-only"
+      },
+      "enabled": true
     }
   }
 }
