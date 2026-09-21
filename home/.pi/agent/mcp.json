@@ -10,10 +10,10 @@
     "obsidian": {
       "type": "remote",
       "transport": "streamable-http",
-      "url": "http://127.0.0.1:27123/mcp",
+      "url": "http://127.0.0.1:27200/mcp",
       "lifecycle": "lazy",
       "headers": {
-        "Authorization": "Bearer local-only"
+        "Authorization": "Bearer local-only-token-need-to-make-it-long-and-stuff"
       },
       "enabled": true
     }
