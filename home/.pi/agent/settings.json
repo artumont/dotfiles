@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "0.85.1",
+  "lastChangelogVersion": "0.86.1",
   "theme": "dark/dark",
   "defaultProvider": "commandcode",
   "defaultModel": "deepseek/deepseek-v4.1-flash",
@@ -37,6 +37,8 @@
     "commandcode/MiniMaxAI/MiniMax-M2.5",
     "commandcode/xiaomi/mimo-v2.5-pro",
     "commandcode/xiaomi/mimo-v2.5",
-    "commandcode/meituan/LongCat-2.0:free"
+    "commandcode/meituan/LongCat-2.0",
+    "commandcode/inclusionai/ling-3.0-flash-sante:free",
+    "commandcode/poolside/laguna-s-2.1-free"
   ]
 }

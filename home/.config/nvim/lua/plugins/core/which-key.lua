@@ -17,6 +17,7 @@ return {
       { "<leader>s", icon = "", desc = "Search Methods" },
       { "<leader>k", icon = "", desc = "Docker Actions" },
       { "<leader>t", icon = "", desc = "Terminal Actions" },
+      { "<leader>a", icon = "", desc = "Agent-Smith Actions" },
     },
   },
 }
