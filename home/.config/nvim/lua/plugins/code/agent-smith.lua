@@ -5,7 +5,7 @@ return {
   config = function()
     require("agent-smith").setup {
       provider = "commandcode",
-      model = "xiaomi/mimo-v2.5",
+      model = "xiaomi/mimo-v2.6-flash",
     }
   end,
 }
