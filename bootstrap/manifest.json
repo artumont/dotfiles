@@ -22,8 +22,8 @@
     },
     {
       "name": "Pi MCP config",
-      "source": "home/.pi/agent/mcp.json",
-      "dest": "~/.pi/agent/mcp.json"
+      "source": "home/.pi/agent/mcp-adapter.json",
+      "dest": "~/.pi/agent/mcp-adapter.json"
     },
     {
       "name": "Pi skills",
