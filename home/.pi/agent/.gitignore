@@ -1,6 +1,6 @@
 *
 !.gitignore
-!mcp-adapter.json
+!mcp.json
 !settings.json
 
 # Folders
