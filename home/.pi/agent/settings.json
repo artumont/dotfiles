@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "0.87.1",
+  "lastChangelogVersion": "0.99.1",
   "theme": "dark/dark",
   "defaultProvider": "commandcode",
   "defaultModel": "deepseek/deepseek-v4.1-flash",
@@ -13,13 +13,13 @@
     "npm:pi-lens",
     "npm:context-mode",
     "npm:@the-agency/pi-spec-kit",
-    "npm:@juicesharp/rpiv-todo",
-    "npm:@juicesharp/rpiv-ask-user-question",
     "npm:pi-subagents",
-    "npm:pi-commandcode-provider"
+    "npm:pi-commandcode-provider",
+    "npm:@juicesharp/rpiv-todo",
+    "npm:@juicesharp/rpiv-ask-user-question"
   ],
   "markdown": {
-    "mermaid": "final"
+    "mermaid": "off"
   },
   "enableInstallTelemetry": false,
   "doubleEscapeAction": "tree",
@@ -41,5 +41,7 @@
     "commandcode/inclusionai/ling-3.0-flash-sante:free",
     "commandcode/poolside/laguna-s-2.1-free",
     "commandcode/xiaomi/mimo-v2.6-flash"
-  ]
+  ],
+  "quietStartup": true,
+  "collapseChangelog": true
 }
