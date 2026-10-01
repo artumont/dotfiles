@@ -353,7 +353,8 @@ def _pick_category() -> str | None:
 
 def icon_install() -> None:
     header("Install icon")
-    print(dim(f"  Scale a {icon.MIN_ICON_SIZE}x{icon.MIN_ICON_SIZE}+ icon to all hicolor sizes."))
+    print(dim(f"  Raster: scaled to {icon.MIN_ICON_SIZE}px+ square icons, all sizes."))
+    print(dim("  SVG:    installed once into scalable/ and scaled on demand."))
     print(dim(f"  Source: {icon.REPO_ICONS_DIR}/"))
     print()
 
@@ -451,15 +452,24 @@ def icon_install() -> None:
     print()
 
     # preview
+    is_svg = src.suffix.lower() == ".svg"
     sizes = icon.ICON_SIZES + icon.ICON_SIZES_2X
-    print(dim(f"  Will generate {len(sizes)} files:"))
-    print()
-    for size in sizes:
-        label = icon.size_label(size)
-        target = icon.install_dir(size, category) / f"{name}.png"
-        exists = target.exists()
-        status = yellow("(exists)") if exists else ""
+    if is_svg:
+        print(dim("  Will install 1 file — vector scales to every size:"))
+        print()
+        target = icon.category_dir(icon.SCALABLE_SIZE, category) / f"{name}.svg"
+        status = yellow("(exists)") if target.exists() else ""
+        label = icon.size_label(icon.SCALABLE_SIZE)
         print(f"    {dim('→')} {label:>16}  {dim(str(target))} {status}")
+    else:
+        print(dim(f"  Will generate {len(sizes)} files:"))
+        print()
+        for size in sizes:
+            label = icon.size_label(size)
+            target = icon.category_dir(size, category) / f"{name}.png"
+            exists = target.exists()
+            status = yellow("(exists)") if exists else ""
+            print(f"    {dim('→')} {label:>16}  {dim(str(target))} {status}")
     print()
 
     if not confirm(f"Install {name}?"):
@@ -470,23 +480,30 @@ def icon_install() -> None:
     header(f"Installing {bold(name)}")
     print()
 
-    is_svg = src.suffix.lower() == ".svg"
     installed = 0
-    for size in sizes:
-        target = icon.install_dir(size, category) / f"{name}.png"
+    if is_svg:
+        # Vector: one file, no scaling passes.
+        target = icon.category_dir(icon.SCALABLE_SIZE, category) / f"{name}.svg"
         try:
-            if is_svg:
-                icon.copy_svg(src, target)
-            else:
-                icon.scale_icon(src, size, target)
-            print(f"  {green('✓')} {icon.size_label(size):>16}  {dim(str(target))}")
-            installed += 1
+            icon.copy_svg(src, target)
+            label = icon.size_label(icon.SCALABLE_SIZE)
+            print(f"  {green('✓')} {label:>16}  {dim(str(target))}")
+            installed = 1
         except Exception as error:
-            print(f"  {red('✗')} {size}x{size}  {red(str(error))}")
+            print(f"  {red('✗')} scalable  {red(str(error))}")
+    else:
+        for size in sizes:
+            target = icon.category_dir(size, category) / f"{name}.png"
+            try:
+                icon.scale_icon(src, size, target)
+                print(f"  {green('✓')} {icon.size_label(size):>16}  {dim(str(target))}")
+                installed += 1
+            except Exception as error:
+                print(f"  {red('✗')} {size}x{size}  {red(str(error))}")
 
     footer()
     print()
-    print(f"  {green(f'✓ {installed}/{len(sizes)} sizes installed')}")
+    print(f"  {green(f'✓ {installed}/{1 if is_svg else len(sizes)} installed')}")
     print(f"  {dim(f'Base: {icon.HICOLOR_BASE}')}")
     pause()
 
@@ -516,7 +533,8 @@ def icon_list() -> None:
             for s in sizes:
                 counts[s] = counts.get(s, 0) + 1
             human = ", ".join(
-                f"{s}x{s}" if c == 1 else f"{s}x{s} (×{c})" for s, c in sorted(counts.items())
+                icon.size_label(s) if c == 1 else f"{icon.size_label(s)} (×{c})"
+                for s, c in sorted(counts.items())
             )
             print(f"    {green('•')} {bold(name)}  {dim(human)}")
         print()
@@ -586,7 +604,7 @@ def icon_menu() -> None:
         print()
         print(f"  {dim('Repo source:')}  {icon.REPO_ICONS_DIR}/")
         print(f"  {dim('Install to:')}    {icon.HICOLOR_BASE}/")
-        print(f"  {dim('Min size:')}      {icon.MIN_ICON_SIZE}x{icon.MIN_ICON_SIZE}")
+        print(f"  {dim('Min size:')}      {icon.MIN_ICON_SIZE}x{icon.MIN_ICON_SIZE} (raster only; SVG exempt)")
         print(f"  {dim('Sizes:')}         {', '.join(str(s) for s in icon.ICON_SIZES)}")
         print(f"  {dim('HiDPI @2x:')}    {', '.join(str(s) for s in icon.ICON_SIZES_2X)}")
 
@@ -598,7 +616,7 @@ def icon_menu() -> None:
         else:
             print(yellow("  No icons in desktop/icons/ — add PNG/SVG files to desktop/icons/{category}/"))
         print()
-        print(f"    {green('1')}  {dim('▸')}  Install icon (scale to all sizes)")
+        print(f"    {green('1')}  {dim('▸')}  Install icon (raster scaled, SVG copied)")
         print(f"    {cyan('2')}  {dim('▸')}  List installed icons")
         print(f"    {red('3')}  {dim('▸')}  Remove icon")
         print(f"    {dim('q')}  {dim('▸')}  Back to main menu")

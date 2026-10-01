@@ -1,6 +1,8 @@
 # Icon categories in icons/
 # Each folder mirrors hicolor's structure.
-# Drop a 1024x1024+ PNG/SVG here, then use `manager.py → 4 → 1` to install.
+# Raster: 1024x1024+ and square — scaled to every hicolor size, ~15 PNGs.
+# Vector: any SVG — copied once to hicolor/scalable/<category>/, no scaling.
+# Install with `manager.py → 4 → 1`.
 
 /apps            — application launchers
 /categories      — app category icons
@@ -11,5 +13,4 @@
 /status          — status indicator icons
 
 # Current icons:
-#   apps/neovim.svg   — Neovim logo (vector, 1024x1024)
-#   apps/neovim.png   — Neovim logo (raster, 1024x1024)
+#   apps/neovim.svg   — Neovim logo (vector, 602x734 → installed to scalable/apps/)

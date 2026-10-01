@@ -5,13 +5,23 @@ from __future__ import annotations
 import contextlib
 import shutil
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from defusedxml import ElementTree as ET
+
+if TYPE_CHECKING:
+    from xml.etree.ElementTree import Element
 
 ROOT = Path(__file__).resolve().parents[1]
 REPO_ICONS_DIR = ROOT / "desktop" / "icons"
 
 HICOLOR_BASE = Path("~/.local/share/icons/hicolor").expanduser()
+
+# Vector icons live in one directory, not one per size.
+SCALABLE_DIR = HICOLOR_BASE / "scalable"
+
+# Sentinel "size" for icons stored in scalable/. Sorts before every real size.
+SCALABLE_SIZE = 0
 
 # Standard hicolor sizes (px)
 ICON_SIZES = [16, 22, 24, 32, 48, 64, 96, 128, 192, 256, 512, 1024]
@@ -20,6 +30,8 @@ ICON_SIZES = [16, 22, 24, 32, 48, 64, 96, 128, 192, 256, 512, 1024]
 ICON_SIZES_2X = [s * 2 for s in ICON_SIZES]
 
 MIN_ICON_SIZE = 1024
+# Raster floor only. SVG is vector, so the floor is meaningless there —
+# _validate_svg only rejects degenerate dimensions.
 
 ICON_CATEGORIES = [
     ("apps", "Applications (launchers, .desktop)"),
@@ -37,6 +49,8 @@ ICON_FORMATS = {".png", ".svg", ".xpm"}
 
 
 def size_label(size: int) -> str:
+    if size == SCALABLE_SIZE:
+        return "scalable"
     px = f"{size}x{size}"
     if size % 1024 == 0 and size >= 1024:
         return f"{px}  ({size // 1024}K)"
@@ -48,6 +62,13 @@ def size_label(size: int) -> str:
 def install_dir(size: int, category: str) -> Path:
     """Return the hicolor directory for a given size + category."""
     return HICOLOR_BASE / f"{size}x{size}" / category
+
+
+def category_dir(size: int, category: str) -> Path:
+    """Install directory for a size, accepting the SCALABLE_SIZE sentinel."""
+    if size == SCALABLE_SIZE:
+        return SCALABLE_DIR / category
+    return install_dir(size, category)
 
 
 # --- repo icons scan --------------------------------------------------------
@@ -140,22 +161,45 @@ def validate_source(path: Path) -> tuple[bool, str]:
     return _validate_raster(path)
 
 
+def _svg_length(value: str | None) -> int | None:
+    """Parse an SVG length attribute into px. None when not a plain number."""
+    if not value:
+        return None
+    cleaned = value.strip().lower().removesuffix("px").removesuffix("pt")
+    try:
+        return int(float(cleaned))
+    except ValueError:
+        return None
+
+
+def _svg_dimensions(root: Element) -> tuple[int, int] | None:
+    """Declared width/height in px, falling back to the viewBox."""
+    w = _svg_length(root.get("width"))
+    h = _svg_length(root.get("height"))
+    if w is not None and h is not None:
+        return w, h
+
+    viewbox = (root.get("viewBox") or "").replace(",", " ").split()
+    if len(viewbox) == 4:
+        with contextlib.suppress(ValueError):
+            return int(float(viewbox[2])), int(float(viewbox[3]))
+    return None
+
+
 def _validate_svg(path: Path) -> tuple[bool, str]:
+    """SVG is vector — MIN_ICON_SIZE does not apply.
+
+    A 602x734 SVG is crisp at every size, so the raster floor would reject
+    perfectly good icons. Only reject degenerate dimensions.
+    """
     with contextlib.suppress(Exception):
         tree = ET.parse(path)
         root = tree.getroot()
         if root is None:
             return True, ""
-        width = root.get("width")
-        height = root.get("height")
-        if width and height:
-            w = int(float(width.replace("px", "").replace("pt", "")))
-            h = int(float(height.replace("px", "").replace("pt", "")))
-            if w < MIN_ICON_SIZE or h < MIN_ICON_SIZE:
-                return (
-                    False,
-                    f"SVG is {w}x{h} — minimum is {MIN_ICON_SIZE}x{MIN_ICON_SIZE}",
-                )
+        dims = _svg_dimensions(root)
+        if dims is not None and (dims[0] <= 0 or dims[1] <= 0):
+            return False, f"SVG has invalid dimensions {dims[0]}x{dims[1]}"
     # unparseable SVG: accept it anyway
     return True, ""
 
@@ -184,19 +228,17 @@ def _validate_raster(path: Path) -> tuple[bool, str]:
 
 
 def get_image_dimensions(path: Path) -> tuple[int, int] | None:
-    """Return (width, height) for raster images, None for SVG or on error."""
+    """Return (width, height) for raster images, None on error.
+
+    For SVG this is the declared size (or viewBox), reported for display only.
+    """
     if path.suffix.lower() == ".svg":
         with contextlib.suppress(Exception):
             tree = ET.parse(path)
             root = tree.getroot()
             if root is None:
                 return None
-            width = root.get("width")
-            height = root.get("height")
-            if width and height:
-                w = int(float(width.replace("px", "").replace("pt", "")))
-                h = int(float(height.replace("px", "").replace("pt", "")))
-                return w, h
+            return _svg_dimensions(root)
         return None
 
     try:
@@ -233,27 +275,32 @@ def copy_svg(source: Path, dest: Path) -> None:
 
 
 def installed_icons() -> dict[str, dict[str, list[int]]]:
-    """Scan ~/.local/share/icons/hicolor/ and return {name: {category: [sizes]}}."""
+    """Scan ~/.local/share/icons/hicolor/ and return {name: {category: [sizes]}}.
+
+    Icons in scalable/ are reported under the SCALABLE_SIZE sentinel.
+    """
     icons: dict[str, dict[str, list[int]]] = {}
     if not HICOLOR_BASE.is_dir():
         return icons
 
-    for size_dir in sorted(HICOLOR_BASE.iterdir()):
-        if not size_dir.is_dir():
+    for size_path in sorted(HICOLOR_BASE.iterdir()):
+        if not size_path.is_dir():
             continue
-        base_name = size_dir.name
-        size_str = base_name.split("@")[0]
-        parts = size_str.split("x")
-        if len(parts) != 2:
-            continue
-        try:
-            size = int(parts[0])
-        except ValueError:
-            continue
-        if parts[0] != parts[1]:
-            continue
+        size_str = size_path.name.split("@")[0]
+        if size_str == SCALABLE_DIR.name:
+            size = SCALABLE_SIZE
+        else:
+            parts = size_str.split("x")
+            if len(parts) != 2:
+                continue
+            try:
+                size = int(parts[0])
+            except ValueError:
+                continue
+            if parts[0] != parts[1]:
+                continue
 
-        for cat_dir in sorted(size_dir.iterdir()):
+        for cat_dir in sorted(size_path.iterdir()):
             if not cat_dir.is_dir():
                 continue
             category = cat_dir.name
@@ -273,7 +320,7 @@ def remove_icon_files(name: str, icons_db: dict[str, dict[str, list[int]]]) -> i
     for cat, sizes in icons_db[name].items():
         for size in sizes:
             for ext in ICON_FORMATS:
-                target = install_dir(size, cat) / f"{name}{ext}"
+                target = category_dir(size, cat) / f"{name}{ext}"
                 if target.exists():
                     try:
                         target.unlink()
