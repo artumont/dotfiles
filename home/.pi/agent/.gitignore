@@ -2,6 +2,8 @@
 !.gitignore
 !mcp-adapter.json
 !settings.json
+!AGENTS.md
+!APPEND_SYSTEM.md
 
 # Folders
 !skills/

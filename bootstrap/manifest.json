@@ -31,6 +31,16 @@
       "dest": "~/.pi/agent/skills"
     },
     {
+      "name": "Pi instructions",
+      "source": "home/.pi/agent/AGENTS.md",
+      "dest": "~/.pi/agent/AGENTS.md"
+    },
+    {
+      "name": "Pi system prompt append",
+      "source": "home/.pi/agent/APPEND_SYSTEM.md",
+      "dest": "~/.pi/agent/APPEND_SYSTEM.md"
+    },
+    {
       "name": "Neovim Desktop File",
       "source": "home/.local/share/applications/Neovim.desktop",
       "dest": "~/.local/share/applications/Neovim.desktop"
