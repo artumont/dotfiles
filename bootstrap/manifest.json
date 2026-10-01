@@ -44,6 +44,51 @@
       "name": "Wallpapers",
       "source": "desktop/wallpapers",
       "dest": "~/Videos/Wallpapers"
+    },
+    {
+      "name": "KDE Globals",
+      "source": "home/.config/kdeglobals",
+      "dest": "~/.config/kdeglobals"
+    },
+    {
+      "name": "KDE Global Shortcuts",
+      "source": "home/.config/kglobalshortcutsrc",
+      "dest": "~/.config/kglobalshortcutsrc"
+    },
+    {
+      "name": "KDE Plasma Theme",
+      "source": "home/.config/plasmarc",
+      "dest": "~/.config/plasmarc"
+    },
+    {
+      "name": "KDE Splash",
+      "source": "home/.config/ksplashrc",
+      "dest": "~/.config/ksplashrc"
+    },
+    {
+      "name": "KDE Screen Locker",
+      "source": "home/.config/kscreenlockerrc",
+      "dest": "~/.config/kscreenlockerrc"
+    },
+    {
+      "name": "KWin",
+      "source": "home/.config/kwinrc",
+      "dest": "~/.config/kwinrc"
+    },
+    {
+      "name": "GTK 3",
+      "source": "home/.config/gtk-3.0",
+      "dest": "~/.config/gtk-3.0"
+    },
+    {
+      "name": "GTK 4",
+      "source": "home/.config/gtk-4.0",
+      "dest": "~/.config/gtk-4.0"
+    },
+    {
+      "name": "KDE Color Schemes",
+      "source": "desktop/color-schemes",
+      "dest": "~/.local/share/color-schemes"
     }
   ]
 }

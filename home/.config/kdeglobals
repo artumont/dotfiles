@@ -1,0 +1,184 @@
+[ColorEffects:Disabled]
+ChangeSelectionColor=
+Color=56,56,56
+ColorAmount=0
+ColorEffect=0
+ContrastAmount=0.65
+ContrastEffect=1
+Enable=
+IntensityAmount=0.1
+IntensityEffect=2
+
+[ColorEffects:Inactive]
+ChangeSelectionColor=true
+Color=112,111,110
+ColorAmount=0.025
+ColorEffect=2
+ContrastAmount=0.1
+ContrastEffect=2
+Enable=false
+IntensityAmount=0
+IntensityEffect=0
+
+[Colors:Button]
+BackgroundAlternate=51,63,102
+BackgroundNormal=65,73,107
+DecorationFocus=46,60,100
+DecorationHover=46,60,100
+ForegroundActive=46,60,100
+ForegroundInactive=128,137,179
+ForegroundLink=34,44,73
+ForegroundNegative=247,118,142
+ForegroundNeutral=209,134,54
+ForegroundNormal=192,202,245
+ForegroundPositive=55,140,80
+ForegroundVisited=187,154,247
+
+[Colors:Complementary]
+BackgroundAlternate=31,35,53
+BackgroundNormal=36,40,59
+DecorationFocus=46,60,100
+DecorationHover=46,60,100
+ForegroundActive=46,60,100
+ForegroundInactive=128,137,179
+ForegroundLink=180,189,223
+ForegroundNegative=247,118,142
+ForegroundNeutral=209,134,54
+ForegroundNormal=192,202,245
+ForegroundPositive=55,140,80
+ForegroundVisited=187,154,247
+
+[Colors:Header]
+BackgroundAlternate=36,40,59
+BackgroundNormal=31,35,53
+DecorationFocus=46,60,100
+DecorationHover=46,60,100
+ForegroundActive=46,60,100
+ForegroundInactive=128,137,179
+ForegroundLink=180,189,223
+ForegroundNegative=247,118,142
+ForegroundNeutral=209,134,54
+ForegroundNormal=192,202,245
+ForegroundPositive=55,140,80
+ForegroundVisited=187,154,247
+
+[Colors:Header][Inactive]
+BackgroundAlternate=31,35,53
+BackgroundNormal=27,30,46
+DecorationFocus=122,162,247
+DecorationHover=122,162,247
+ForegroundActive=122,162,247
+ForegroundInactive=128,137,179
+ForegroundLink=122,162,247
+ForegroundNegative=247,118,142
+ForegroundNeutral=209,134,54
+ForegroundNormal=169,177,214
+ForegroundPositive=55,140,80
+ForegroundVisited=187,154,247
+
+[Colors:Selection]
+BackgroundAlternate=43,54,87
+BackgroundNormal=43,54,87
+DecorationFocus=46,60,100
+DecorationHover=46,60,100
+ForegroundActive=46,60,100
+ForegroundInactive=255,255,255
+ForegroundLink=34,44,73
+ForegroundNegative=247,118,142
+ForegroundNeutral=209,134,54
+ForegroundNormal=255,255,255
+ForegroundPositive=55,140,80
+ForegroundVisited=187,154,247
+
+[Colors:Tooltip]
+BackgroundAlternate=36,40,59
+BackgroundNormal=31,35,53
+DecorationFocus=46,60,100
+DecorationHover=46,60,100
+ForegroundActive=46,60,100
+ForegroundInactive=128,137,179
+ForegroundLink=180,189,223
+ForegroundNegative=247,118,142
+ForegroundNeutral=209,134,54
+ForegroundNormal=192,202,245
+ForegroundPositive=55,140,80
+ForegroundVisited=187,154,247
+
+[Colors:View]
+BackgroundAlternate=31,35,53
+BackgroundNormal=36,40,59
+DecorationFocus=46,60,100
+DecorationHover=46,60,100
+ForegroundActive=46,60,100
+ForegroundInactive=128,137,179
+ForegroundLink=180,189,223
+ForegroundNegative=247,118,142
+ForegroundNeutral=209,134,54
+ForegroundNormal=192,202,245
+ForegroundPositive=55,140,80
+ForegroundVisited=187,154,247
+
+[Colors:Window]
+BackgroundAlternate=31,35,53
+BackgroundNormal=31,35,53
+DecorationFocus=46,60,100
+DecorationHover=46,60,100
+ForegroundActive=46,60,100
+ForegroundInactive=128,137,179
+ForegroundLink=180,189,223
+ForegroundNegative=247,118,142
+ForegroundNeutral=209,134,54
+ForegroundNormal=192,202,245
+ForegroundPositive=55,140,80
+ForegroundVisited=187,154,247
+
+[DirSelect Dialog]
+DirSelectDialog Size=849,542
+History Items[$e]=file:$HOME/Documents/Notes,file:$HOME/.local/share/xmcl,file:$HOME/.local/share/xmcl,file:$HOME/Downloads,file:$HOME/Downloads,file:$HOME/Desktop/Code/remote-wol-esp32,file:$HOME/Desktop/Code/remote-wol-esp32,file:$HOME/Desktop/Code/SiaERP/libs,file:$HOME/Desktop/Code/SiaERP-Legacy,file:$HOME/Desktop/Code/better-warp-gui,file:$HOME/Desktop/Code/zero-one,file:$HOME/Desktop/Code/zero-one/.github/,file:$HOME/Desktop/Code/zero-one/scripts,file:$HOME/Desktop/Code/zero-one/docs,file:$HOME/Desktop/Code/openchamber/packages/ui,file:$HOME/Desktop/Code/SiaERP/devops,file:$HOME/Desktop/Code/SiaERP/devops,file:$HOME/Desktop/Code/SiaERP/devops,file:$HOME/Desktop/Code/SiaERP/frontend,file:$HOME/Desktop/Code/SiaERP/devops,file:$HOME/Desktop/Code/SiaERP/frontend,file:///media/artu/Seagate Drive,file:$HOME/Downloads,file:$HOME/Downloads,file:$HOME/Downloads,file:$HOME/Downloads,file:$HOME/Downloads,file:$HOME/Downloads,file:///media/artu/Seagate Drive/HeroicLibrary,file:$HOME/Desktop/Code/SiaERP,file:$HOME/Downloads,file:$HOME/Downloads,file:$HOME/Desktop/Code/Bloggy/devops,file:$HOME/Desktop/Code/SiaERP/.github/,file:$HOME/Desktop/Code/SiaERP,file:$HOME/Desktop/Code/SiaERP/\\,github,file:$HOME/Desktop/Code/SiaERP-Experimental/docs,file:$HOME/Desktop/Code/SiaERP-Experimental/devops,file:$HOME/Desktop/Code/SiaERP-Experimental/backend,file:$HOME/Desktop/Code/SiaERP/.dev,file:$HOME/Desktop/Code/SiaERP/devops,file:$HOME/Desktop/Code/SiaERP/backend,file:$HOME/Desktop/Code/SiaERP,file:$HOME/Downloads/test,file:$HOME/Downloads,file:$HOME/.local/share/Heroic/Prefixes,file:$HOME/.local/share/H,file:$HOME/.local/share/,file:$HOME/.local/share/Heroic,file:$HOME/.local/share/Heroic/
+Splitter State=\x00\x00\x00\xff\x00\x00\x00\x01\x00\x00\x00\x02\x00\x00\x00\x8c\x00\x00\x02\xa8\x00\xff\xff\xff\xff\x01\x00\x00\x00\x01\x00
+
+[General]
+AccentColor=46,60,100
+ColorScheme=TokyoNightStorm
+ColorSchemeHash=51d730535134e778fe069690ae4f1f61fb700fdc
+LastUsedCustomAccentColor=46,60,100
+TerminalApplication=wezterm start --cwd .
+TerminalService=org.wezfurlong.wezterm.desktop
+UseSystemBell=true
+
+[Icons]
+Theme=breeze
+
+[KDE]
+LookAndFeelPackage=org.kde.breezedark.desktop
+
+[KFileDialog Settings]
+Allow Expansion=false
+Automatically select filename extension=true
+Breadcrumb Navigation=false
+Decoration position=2
+LocationCombo Completionmode=5
+PathCombo Completionmode=5
+Show Bookmarks=false
+Show Full Path=false
+Show Inline Previews=true
+Show Preview=false
+Show Speedbar=true
+Show hidden files=false
+Sort by=Name
+Sort directories first=true
+Sort hidden files last=false
+Sort reversed=false
+Speedbar Width=140
+View Style=Simple
+
+[KShortcutsDialog Settings]
+Dialog Size=600,480
+
+[WM]
+activeBackground=31,35,53
+activeBlend=192,202,245
+activeForeground=192,202,245
+inactiveBackground=27,30,46
+inactiveBlend=128,137,179
+inactiveForeground=128,137,179
