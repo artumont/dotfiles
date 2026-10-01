@@ -139,8 +139,7 @@ Splitter State=\x00\x00\x00\xff\x00\x00\x00\x01\x00\x00\x00\x02\x00\x00\x00\x8c\
 
 [General]
 AccentColor=46,60,100
-ColorScheme=TokyoNightStorm
-ColorSchemeHash=51d730535134e778fe069690ae4f1f61fb700fdc
+ColorSchemeHash=84df3bba0a27250e78a49269a77e3e238099b43a
 LastUsedCustomAccentColor=46,60,100
 TerminalApplication=wezterm start --cwd .
 TerminalService=org.wezfurlong.wezterm.desktop
