@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import json
 import os
 import subprocess
@@ -10,19 +11,18 @@ import sys
 from pathlib import Path
 
 from bootstrap import icons as icon
+from bootstrap.install import (
+    DEFAULT_BACKUP_DIR,
+    destination_path,
+    install_link,
+    load_manifest,
+    source_path,
+)
 from bootstrap.manifest import (
     ROOT,
     human_size,
     list_candidates,
     suggest_dest,
-)
-from bootstrap.install import (
-    DEFAULT_BACKUP_DIR,
-    DEFAULT_MANIFEST,
-    destination_path,
-    install_link,
-    load_manifest,
-    source_path,
 )
 
 MANIFEST_PATH = ROOT / "bootstrap" / "manifest.json"
@@ -155,12 +155,11 @@ def add_entry(manifest_path: Path) -> bool:
     name = ask("Name", Path(source).name.replace("-", " ").replace("_", " ").title())
 
     entries = load_manifest(manifest_path)
-    if any(entry["source"] == source for entry in entries):
-        if not confirm(
-            yellow(f"warning: '{source}' already in manifest. Add duplicate?"),
-            default_yes=False,
-        ):
-            return False
+    if any(entry["source"] == source for entry in entries) and not confirm(
+        yellow(f"warning: '{source}' already in manifest. Add duplicate?"),
+        default_yes=False,
+    ):
+        return False
 
     entries.append({"name": name, "source": source, "dest": dest})
 
@@ -230,10 +229,8 @@ def choose_dest(source: str) -> str | None:
     expanded = destination_path(dest)
     if expanded.exists() or expanded.is_symlink():
         resolved = None
-        try:
+        with contextlib.suppress(OSError):
             resolved = source_path(source)
-        except OSError:
-            pass
         if (
             resolved is not None
             and expanded.is_symlink()
@@ -364,9 +361,9 @@ def icon_install() -> None:
     repo_icons = icon.scan_repo_icons()
 
     if not repo_icons:
-        print(yellow("  No icons found in icons/."))
+        print(yellow("  No icons found in desktop/icons/."))
         print()
-        print(dim("  Add PNG/SVG files to icons/{category}/ and try again."))
+        print(dim("  Add PNG/SVG files to desktop/icons/{category}/ and try again."))
         footer()
         pause()
         return
@@ -597,9 +594,9 @@ def icon_menu() -> None:
         repo_count = len(icon.scan_repo_icons())
         print()
         if repo_count:
-            print(f"  {green(repo_count)} source icon(s) in {blue('icons/')}")
+            print(f"  {green(repo_count)} source icon(s) in {blue('desktop/icons/')}")
         else:
-            print(yellow("  No icons in icons/ — add PNG/SVG files to icons/{category}/"))
+            print(yellow("  No icons in desktop/icons/ — add PNG/SVG files to desktop/icons/{category}/"))
         print()
         print(f"    {green('1')}  {dim('▸')}  Install icon (scale to all sizes)")
         print(f"    {cyan('2')}  {dim('▸')}  List installed icons")

@@ -7,7 +7,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
-# Categories from icons/.paths
+# Categories from desktop/icons/.paths
 ICON_CATEGORIES = [
     "apps",
     "categories",
@@ -21,7 +21,7 @@ ICON_CATEGORIES = [
 
 def ensure_dirs() -> None:
     """Create missing icon category dirs and hicolor base."""
-    icons_dir = ROOT / "icons"
+    icons_dir = ROOT / "desktop" / "icons"
     hicolor_base = Path("~/.local/share/icons/hicolor").expanduser()
 
     for cat in ICON_CATEGORIES:

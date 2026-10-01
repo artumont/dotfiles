@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+import contextlib
 import shutil
 from pathlib import Path
 
+from defusedxml import ElementTree as ET
+
 ROOT = Path(__file__).resolve().parents[1]
-REPO_ICONS_DIR = ROOT / "icons"
+REPO_ICONS_DIR = ROOT / "desktop" / "icons"
 
 HICOLOR_BASE = Path("~/.local/share/icons/hicolor").expanduser()
 
@@ -66,7 +69,7 @@ def scan_repo_icons() -> list[RepoIcon]:
     """Scan icons/ folder for source icon files.
 
     Expected layout:
-        icons/
+        desktop/icons/
           apps/myapp.png
           mimetypes/mytype.svg
           devices/mydevice.png
@@ -83,7 +86,7 @@ def scan_repo_icons() -> list[RepoIcon]:
         if item.is_dir():
             # category subfolder
             cat_name = item.name
-            if cat_name.startswith(".") or cat_name.startswith("_"):
+            if cat_name.startswith((".", "_")):
                 continue
             for icon_file in sorted(item.iterdir()):
                 if icon_file.is_file() and icon_file.suffix.lower() in ICON_FORMATS:
@@ -96,7 +99,7 @@ def scan_repo_icons() -> list[RepoIcon]:
 
 
 def ensure_repo_icons_dir() -> Path:
-    """Create icons/ folder with category subdirs if missing."""
+    """Create desktop/icons/ folder with category subdirs if missing."""
     REPO_ICONS_DIR.mkdir(parents=True, exist_ok=True)
     for cat_name, _ in ICON_CATEGORIES:
         (REPO_ICONS_DIR / cat_name).mkdir(exist_ok=True)
@@ -138,11 +141,11 @@ def validate_source(path: Path) -> tuple[bool, str]:
 
 
 def _validate_svg(path: Path) -> tuple[bool, str]:
-    try:
-        import xml.etree.ElementTree as ET
-
+    with contextlib.suppress(Exception):
         tree = ET.parse(path)
         root = tree.getroot()
+        if root is None:
+            return True, ""
         width = root.get("width")
         height = root.get("height")
         if width and height:
@@ -153,8 +156,7 @@ def _validate_svg(path: Path) -> tuple[bool, str]:
                     False,
                     f"SVG is {w}x{h} — minimum is {MIN_ICON_SIZE}x{MIN_ICON_SIZE}",
                 )
-    except Exception:
-        pass  # can't parse SVG → accept it anyway
+    # unparseable SVG: accept it anyway
     return True, ""
 
 
@@ -184,19 +186,17 @@ def _validate_raster(path: Path) -> tuple[bool, str]:
 def get_image_dimensions(path: Path) -> tuple[int, int] | None:
     """Return (width, height) for raster images, None for SVG or on error."""
     if path.suffix.lower() == ".svg":
-        try:
-            import xml.etree.ElementTree as ET
-
+        with contextlib.suppress(Exception):
             tree = ET.parse(path)
             root = tree.getroot()
+            if root is None:
+                return None
             width = root.get("width")
             height = root.get("height")
             if width and height:
                 w = int(float(width.replace("px", "").replace("pt", "")))
                 h = int(float(height.replace("px", "").replace("pt", "")))
                 return w, h
-        except Exception:
-            pass
         return None
 
     try:

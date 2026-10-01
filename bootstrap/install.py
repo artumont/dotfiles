@@ -18,8 +18,11 @@ DEFAULT_BACKUP_DIR = Path("~/.local/state/dotfiles-backups").expanduser()
 
 
 def load_manifest(path: Path) -> list[dict[str, str]]:
-    with path.open(encoding="utf-8") as file:
-        data: Any = json.load(file)
+    try:
+        with path.open(encoding="utf-8") as file:
+            data: Any = json.load(file)
+    except (OSError, json.JSONDecodeError) as error:
+        raise ValueError(f"Cannot read manifest {path}: {error}") from error
 
     links = data.get("links") if isinstance(data, dict) else None
     if not isinstance(links, list):
@@ -59,6 +62,67 @@ def destination_path(raw_dest: str) -> Path:
     return path
 
 
+def is_within(path: Path, root: Path) -> bool:
+    """True if path equals or lives under root."""
+    try:
+        path.relative_to(root)
+        return True
+    except ValueError:
+        return False
+
+
+def resolve_safely(path: Path) -> Path | None:
+    """Resolve symlinks, returning None for loops or unreadable paths."""
+    try:
+        return path.resolve()
+    except (OSError, RuntimeError):
+        return None
+
+
+def guard_repo_destination(dest: Path) -> None:
+    """Refuse destinations whose write would land inside the repository.
+
+    A manifest entry nested inside an already-linked parent resolves
+    through that parent's symlink: the child source gets removed and
+    replaced by a self-referential symlink (ELOOP), so the app sees it as
+    missing. Link only the parent.
+    """
+    parent = resolve_safely(dest.parent)
+    if parent is not None and is_within(parent, ROOT):
+        raise ValueError(
+            f"Destination {dest} would be written inside the repository "
+            f"({parent}) — link only the parent directory"
+        )
+    if not dest.is_symlink():
+        resolved = resolve_safely(dest)
+        if resolved is not None and is_within(resolved, ROOT):
+            raise ValueError(
+                f"Destination {dest} resolves inside the repository ({resolved}) "
+                "— refusing to modify repo sources"
+            )
+
+
+def validate_entries(entries: list[dict[str, str]]) -> None:
+    """Reject entries nested inside another entry.
+
+    Linking a child whose parent is already a symlink writes through that
+    symlink back into the repository: the child source gets deleted and
+    replaced by a self-referential symlink (ELOOP), so the app sees it as
+    missing. Only the parent should be linked.
+    """
+    for field in ("source", "dest"):
+        paths = [(entry["name"], Path(entry[field])) for entry in entries]
+        for index, (name_a, path_a) in enumerate(paths):
+            for name_b, path_b in paths[index + 1 :]:
+                if path_a == path_b:
+                    continue
+                if is_within(path_a, path_b) or is_within(path_b, path_a):
+                    raise ValueError(
+                        f"Manifest entries '{name_a}' and '{name_b}' overlap on "
+                        f"{field} path ({path_a} vs {path_b}) — link only the parent"
+                    )
+
+
 def backup_path(dest: Path, backup_dir: Path) -> Path:
     stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
     relative = Path(str(dest).lstrip("/"))
@@ -95,7 +159,10 @@ def remove_existing(dest: Path, backup_dir: Path, make_backup: bool) -> None:
     if dest.is_symlink() or dest.is_file():
         dest.unlink()
     else:
-        shutil.rmtree(dest)
+        try:
+            shutil.rmtree(dest)
+        except OSError as error:
+            raise OSError(f"Cannot remove existing destination {dest}: {error}") from error
 
 
 def install_link(
@@ -105,9 +172,11 @@ def install_link(
     dest = destination_path(entry["dest"])
     print(f"{entry['name']}: {source} -> {dest}")
 
-    if dest.is_symlink() and dest.resolve() == source:
+    if dest.is_symlink() and resolve_safely(dest) == source:
         print("  already installed")
         return
+
+    guard_repo_destination(dest)
 
     if dry_run:
         if dest.exists() or dest.is_symlink():
@@ -155,6 +224,8 @@ def main() -> int:
             if unknown:
                 raise ValueError(f"Unknown --only entry: {', '.join(sorted(unknown))}")
             entries = [entry for entry in entries if entry["name"] in selected]
+
+        validate_entries(entries)
 
         backup_dir = args.backup_dir.expanduser().resolve()
         if not args.dry_run and not args.no_backup:

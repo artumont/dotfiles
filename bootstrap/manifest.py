@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from bootstrap.install import load_manifest, source_path
+from bootstrap.install import load_manifest
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE_ROOTS = ("home", "system", "hardware")
+SOURCE_ROOTS = ("home", "desktop", "system", "hardware")
 EXCLUDED_DIRS = {"__pycache__"}
 EXCLUDED_SUFFIXES = {".vil", ".pyc"}
 
@@ -65,4 +65,6 @@ def suggest_dest(source: str) -> str:
         return "~/" + "/".join(parts[1:])
     if parts and parts[0] in ("system", "hardware"):
         return "~/.config/" + "/".join(parts[1:])
+    if parts and parts[0] == "desktop":
+        return "~/.local/share/" + "/".join(parts[1:])
     return "~/.config/" + source

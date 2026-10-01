@@ -31,11 +31,6 @@
       "dest": "~/.pi/agent/skills"
     },
     {
-      "name": "Service Menus",
-      "source": "home/.local/share/kio/servicemenus",
-      "dest": "~/.local/share/kio/servicemenus"
-    },
-    {
       "name": "Neovim Desktop File",
       "source": "home/.local/share/applications/Neovim.desktop",
       "dest": "~/.local/share/applications/Neovim.desktop"
@@ -47,7 +42,7 @@
     },
     {
       "name": "Wallpapers",
-      "source": "wallpapers",
+      "source": "desktop/wallpapers",
       "dest": "~/Videos/Wallpapers"
     }
   ]

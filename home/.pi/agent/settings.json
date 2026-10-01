@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "0.99.1",
+  "lastChangelogVersion": "0.99.2",
   "theme": "dark/dark",
   "defaultProvider": "commandcode",
   "defaultModel": "deepseek/deepseek-v4.1-flash",
@@ -42,6 +42,6 @@
     "commandcode/poolside/laguna-s-2.1-free",
     "commandcode/xiaomi/mimo-v2.6-flash"
   ],
-  "quietStartup": true,
+  "quietStartup": false,
   "collapseChangelog": true
 }
