@@ -43,5 +43,8 @@
     "commandcode/xiaomi/mimo-v2.6-flash"
   ],
   "quietStartup": false,
-  "collapseChangelog": true
+  "collapseChangelog": true,
+  "extensions": [
+    "-builtin:mcp"
+  ]
 }
