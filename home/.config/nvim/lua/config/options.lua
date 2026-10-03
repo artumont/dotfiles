@@ -25,6 +25,8 @@ vim.opt.wrap = false
 
 vim.opt.mousescroll = "ver:2,hor:2"
 
+vim.o.exrc = true
+
 -- Diagnostics
 diagnostic.config {
   virtual_text = true,
