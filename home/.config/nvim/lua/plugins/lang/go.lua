@@ -12,14 +12,4 @@ return {
       },
     },
   },
-
-  mason = {
-    "gopls",
-    "golangci-lint",
-    "golangci-lint-langserver",
-    "gofumpt",
-    "goimports-reviser",
-    "gomodifytags",
-    "gotests",
-  },
 }

@@ -1,4 +1,4 @@
--- MasonLsp config and ensured packages
+-- MasonLsp config
 
 local mason_util = require "utils.mason"
 
@@ -31,13 +31,11 @@ return {
       local langs = mason_util.list_langs()
       local enabled = {}
       for _, lang in ipairs(langs) do
-        for name, cfg in pairs(lang.lsp) do
+        for name, cfg in pairs(lang.servers) do
           vim.lsp.config(name, cfg)
           table.insert(enabled, name)
         end
       end
-
-      vim.lsp.enable(enabled)
     end,
   },
 }
