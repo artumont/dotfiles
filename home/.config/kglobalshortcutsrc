@@ -1,6 +1,7 @@
 [ActivityManager]
 _k_friendly_name=Activity Manager
 switch-to-activity-6d76d60c-21a2-4174-8cfa-89486d6a9be0=none,none,Switch to activity "Default"
+switch-to-activity-cd34e059-5cd3-4345-b0a9-08d152823a16=none,none,Switch to activity "Default"
 
 [KDE Keyboard Layout Switcher]
 Switch keyboard layout to English (US)=none,none,Switch keyboard layout to English (US)
