@@ -12,6 +12,7 @@ return {
         sidebars = "dark",
         floats = "dark",
       },
+      on_highlights = function(hl, c) hl["@string.documentation.python"] = { link = "Comment" } end,
     },
     config = function(_, opts)
       require("tokyonight").setup(opts)
