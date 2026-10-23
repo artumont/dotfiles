@@ -33,3 +33,13 @@ documentation, not in commit messages.
 Rewrite the sentence instead. A comma, colon, semicolon or pair of parentheses
 usually does the job, and a full stop often does it better. Ordinary hyphens are
 fine and expected: `read-only`, `well-known`, `cm-md-math`.
+
+# Code style: simple, lightly commented
+
+- Prefer simplicity over cleverness: fewer layers and abstractions, plain names,
+  the shortest thing that solves the problem.
+- Low commenting rate. Comment only what the code cannot say itself: a
+  non-obvious reason, a tricky edge case, or a contract that comes from outside
+  the repo. Skip obvious classes, fields and short functions.
+- Keep comments short and plain: one or two lines, no restating the code, no
+  long technical essays, no doc-comment walls on simple symbols.
