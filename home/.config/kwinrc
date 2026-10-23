@@ -1,6 +1,6 @@
 [Activities][LastVirtualDesktop]
 6d76d60c-21a2-4174-8cfa-89486d6a9be0=1b26d926-32bc-429b-ae7a-afc633c321ce
-cd34e059-5cd3-4345-b0a9-08d152823a16=3336727b-ef98-4f30-9d4a-51acf86e98ce
+cd34e059-5cd3-4345-b0a9-08d152823a16=1b26d926-32bc-429b-ae7a-afc633c321ce
 
 [Desktops]
 Id_1=1b26d926-32bc-429b-ae7a-afc633c321ce
@@ -29,6 +29,9 @@ MultiScreenMode=1
 
 [Tiling]
 padding=4
+
+[Tiling][1b86777c-1b57-563e-907d-1c2213ce8446]
+tiles={"layoutDirection":"horizontal","tiles":[{"width":0.25},{"width":0.5},{"width":0.25}]}
 
 [Tiling][31743112-f08a-5d69-a6df-670cb8ebcd8d]
 tiles={"layoutDirection":"horizontal","tiles":[{"width":0.25},{"width":0.5},{"width":0.25}]}
