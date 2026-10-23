@@ -61,11 +61,6 @@
       "dest": "~/.config/kdeglobals"
     },
     {
-      "name": "KDE Global Shortcuts",
-      "source": "home/.config/kglobalshortcutsrc",
-      "dest": "~/.config/kglobalshortcutsrc"
-    },
-    {
       "name": "KDE Plasma Theme",
       "source": "home/.config/plasmarc",
       "dest": "~/.config/plasmarc"
@@ -74,16 +69,6 @@
       "name": "KDE Splash",
       "source": "home/.config/ksplashrc",
       "dest": "~/.config/ksplashrc"
-    },
-    {
-      "name": "KDE Screen Locker",
-      "source": "home/.config/kscreenlockerrc",
-      "dest": "~/.config/kscreenlockerrc"
-    },
-    {
-      "name": "KWin",
-      "source": "home/.config/kwinrc",
-      "dest": "~/.config/kwinrc"
     },
     {
       "name": "GTK 3",
