@@ -1,0 +1,4 @@
+#!/bin/sh
+# A pull can delete a repo file that a linked ~/.config entry points at.
+# Restore those links from the pre-pull commit so the config survives.
+python3 -m bootstrap.pull --repair || true

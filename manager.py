@@ -11,6 +11,7 @@ import sys
 from pathlib import Path
 
 from bootstrap import icons as icon
+from bootstrap import pull
 from bootstrap.install import (
     DEFAULT_BACKUP_DIR,
     destination_path,
@@ -648,6 +649,18 @@ def icon_menu() -> None:
             pause()
 
 
+# --- safe pull -------------------------------------------------------------
+
+
+def pull_interactively(manifest_path: Path) -> None:
+    clear()
+    header("Safe pull")
+    print()
+    pull.main(["--manifest", str(manifest_path)])
+    footer()
+    pause()
+
+
 # --- main menu -------------------------------------------------------------
 
 
@@ -659,8 +672,9 @@ def menu() -> int:
         print()
         print(f"    {green('1')}  {dim('▸')}  Add new file / folder to manifest")
         print(f"    {cyan('2')}  {dim('▸')}  Install (interactive, skip entries)")
-        print(f"    {blue('3')}  {dim('▸')}  Show manifest")
-        print(f"    {magenta('4')}  {dim('▸')}  Icon manager")
+        print(f"    {blue('3')}  {dim('▸')}  Safe pull (protects linked files)")
+        print(f"    {magenta('4')}  {dim('▸')}  Show manifest")
+        print(f"    {yellow('5')}  {dim('▸')}  Icon manager")
         print(f"    {dim('q')}  {dim('▸')}  Quit")
         print()
 
@@ -681,10 +695,15 @@ def menu() -> int:
                 error_screen(error)
         elif choice == "3":
             try:
+                pull_interactively(manifest_path)
+            except Exception as error:
+                error_screen(error)
+        elif choice == "4":
+            try:
                 show_manifest(manifest_path)
             except (OSError, ValueError, json.JSONDecodeError) as error:
                 error_screen(error)
-        elif choice == "4":
+        elif choice == "5":
             try:
                 icon_menu()
             except Exception as error:
