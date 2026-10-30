@@ -34,6 +34,28 @@ Rewrite the sentence instead. A comma, colon, semicolon or pair of parentheses
 usually does the job, and a full stop often does it better. Ordinary hyphens are
 fine and expected: `read-only`, `well-known`, `cm-md-math`.
 
+# Writing: no manual line wrapping
+
+Never hard-wrap prose. One paragraph is one line. Do not break lines at 70 or 80
+characters in replies, files, emails, documentation or commit messages. Let the
+viewer wrap.
+
+Exceptions that keep their own line breaks: code blocks, log excerpts, YAML/JSON,
+key-value blocks, and list items (one item per line).
+
+# Language: Spanish means Mexican Spanish
+
+When writing Spanish, use Mexican Spanish (es-MX) vocabulary and conventions.
+
+- Do not use Rioplatense: no voseo (`vos tenés`, `querés`, `andá`, `mirá`), no
+  `che`, no `boludo`, no `laburo`, no `plata`.
+- Do not use peninsular Spanish: no `vosotros`, no `móvil`, no `ordenador`, no
+  `coger`, no `vale`.
+- Prefer Mexican forms: `tú tienes`, `quieres`, `celular`, `computadora`,
+  `carro`, `ahorita`, `platicar`.
+
+Neutral formal Mexican is the default register. Slang only if artu uses it first.
+
 # Code style: simple, lightly commented
 
 - Prefer simplicity over cleverness: fewer layers and abstractions, plain names,
