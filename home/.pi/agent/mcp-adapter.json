@@ -10,7 +10,7 @@
     "firefox": {
       "type": "stdio",
       "command": "node",
-      "args": ["~/.pi/agent/tools/firefox/firefox-bidi-mcp.mjs"],
+      "args": ["~/.pi/agent/integrations/firefox/firefox-bidi-mcp.mjs"],
       "env": {
         "FIREFOX_BIDI_PORT": "9222"
       },

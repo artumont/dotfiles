@@ -7,12 +7,12 @@ Control the user's real Firefox through WebDriver BiDi. No headless browser, no 
 ## Quick start
 
 ```bash
-ss -ltn | grep -q 9222 || ~/.pi/agent/tools/firefox/firefox-agent
+ss -ltn | grep -q 9222 || ~/.pi/agent/integrations/firefox/firefox-agent
 ```
 
 `firefox-agent` opens the profile `Agente` with `--remote-debugging-port 9222` and leaves any other Firefox window alone. Overrides: `FIREFOX_PROFILE=otro` (name or path), `FIREFOX_BIDI_PORT=9333`.
 
-MCP server: `~/.pi/agent/tools/firefox/firefox-bidi-mcp.mjs`, registered as `firefox` with `lifecycle: lazy` in `~/.pi/agent/mcp-adapter.json`.
+MCP server: `~/.pi/agent/integrations/firefox/firefox-bidi-mcp.mjs`, registered as `firefox` with `lifecycle: lazy` in `~/.pi/agent/mcp-adapter.json`.
 
 ## Tools
 

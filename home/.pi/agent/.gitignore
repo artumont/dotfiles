@@ -10,5 +10,5 @@
 !skills/**
 !prompts/
 !prompts/**
-!tools/
-!tools/**
+!integrations/
+!integrations/**

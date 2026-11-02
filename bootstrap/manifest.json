@@ -26,9 +26,9 @@
       "dest": "~/.pi/agent/mcp-adapter.json"
     },
     {
-      "name": "Pi tools",
-      "source": "home/.pi/agent/tools",
-      "dest": "~/.pi/agent/tools"
+      "name": "Pi integrations",
+      "source": "home/.pi/agent/integrations",
+      "dest": "~/.pi/agent/integrations"
     },
     {
       "name": "Pi skills",
