@@ -6,6 +6,16 @@
       "url": "http://127.0.0.1:13337/mcp",
       "lifecycle": "lazy",
       "enabled": true
+    },
+    "firefox": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["~/.pi/agent/tools/firefox/firefox-bidi-mcp.mjs"],
+      "env": {
+        "FIREFOX_BIDI_PORT": "9222"
+      },
+      "lifecycle": "lazy",
+      "enabled": true
     }
   }
 }

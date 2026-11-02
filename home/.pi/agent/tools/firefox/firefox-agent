@@ -1,0 +1,125 @@
+#!/usr/bin/env bash
+# Abre el perfil "Agente" de Firefox con WebDriver BiDi, sin tocar otras instancias.
+# Uso: firefox-agent            (perfil Agente)
+#      FIREFOX_PROFILE=Otro firefox-agent
+#      FIREFOX_BIDI_PORT=9333 firefox-agent
+set -euo pipefail
+
+PORT="${FIREFOX_BIDI_PORT:-9222}"
+PROFILE="${FIREFOX_PROFILE:-Agente}"
+
+find_firefox() {
+  if command -v firefox >/dev/null 2>&1; then command -v firefox; return; fi
+  for c in /Applications/Firefox.app/Contents/MacOS/firefox /usr/lib/firefox/firefox; do
+    [ -x "$c" ] && { echo "$c"; return; }
+  done
+  echo ""
+}
+
+profile_bases() {
+  printf '%s\n' \
+    "$HOME/.config/mozilla/firefox" \
+    "$HOME/.mozilla/firefox" \
+    "$HOME/Library/Application Support/Firefox" \
+    "$HOME/.var/app/org.mozilla.firefox/.mozilla/firefox" \
+    "$HOME/snap/firefox/common/.mozilla/firefox"
+}
+
+# Nombre -> ruta del perfil. Busca en profiles.ini y en la base de Profile Groups.
+resolve_profile() {
+  local name="$1" base ini dir
+  if [ -d "$name" ]; then printf '%s\n' "$name"; return; fi
+
+  while IFS= read -r base; do
+    [ -d "$base" ] || continue
+
+    ini="$base/profiles.ini"
+    if [ -f "$ini" ]; then
+      local found
+      found=$(awk -v want="$name" -v base="$base" '
+        /^\[Profile/ { nm=""; path=""; rel=0 }
+        /^Name=/ { nm=substr($0, 6) }
+        /^Path=/ { path=substr($0, 6) }
+        /^IsRelative=/ { rel=substr($0, 12) }
+        /^$/ { if (nm==want && path!="") print (rel==1 ? base "/" path : path) }
+        END  { if (nm==want && path!="") print (rel==1 ? base "/" path : path) }
+      ' "$ini")
+      if [ -n "${found:-}" ]; then printf '%s\n' "$found"; return; fi
+    fi
+
+    if command -v python3 >/dev/null 2>&1 && [ -d "$base/Profile Groups" ]; then
+      local hit
+      hit=$(python3 - "$base/Profile Groups" "$name" <<'PY' 2>/dev/null || true
+import sqlite3, sys, glob, os
+groups, want = sys.argv[1], sys.argv[2]
+for db in glob.glob(os.path.join(groups, "*.sqlite")):
+    try:
+        tmp = "/tmp/.ffagent-groups.sqlite"
+        import shutil; shutil.copy2(db, tmp)
+        for f in glob.glob(db + "-wal"): shutil.copy2(f, tmp + "-wal")
+        for f in glob.glob(db + "-shm"): shutil.copy2(f, tmp + "-shm")
+        c = sqlite3.connect(f"file:{tmp}?mode=ro", uri=True)
+        row = c.execute("select path from Profiles where name = ?", (want,)).fetchone()
+        if row:
+            print(os.path.join(os.path.dirname(groups), row[0]))
+            break
+    except Exception:
+        pass
+PY
+)
+      if [ -n "${hit:-}" ]; then printf '%s\n' "$hit"; return; fi
+    fi
+  done < <(profile_bases)
+
+  printf '%s\n' ""
+}
+
+in_use() {
+  local p="$1" pid comm
+  for pid in $(pgrep -f -- "--profile $p" 2>/dev/null || true); do
+    comm=$(ps -o comm= -p "$pid" 2>/dev/null || true)
+    case "$comm" in
+      firefox*|*/firefox*) return 0 ;;
+    esac
+  done
+  [ -e "$p/lock" ] && readlink "$p/lock" 2>/dev/null | grep -q ':+' && return 0
+  return 1
+}
+
+FF="$(find_firefox)"
+[ -n "$FF" ] || { echo "firefox-agent: no encontré Firefox." >&2; exit 1; }
+
+if (command -v ss >/dev/null 2>&1 && ss -ltn 2>/dev/null | grep -q ":$PORT ") \
+  || (command -v lsof >/dev/null 2>&1 && lsof -iTCP:"$PORT" -sTCP:LISTEN >/dev/null 2>&1); then
+  echo "firefox-agent: el puerto $PORT ya está ocupado. Prueba FIREFOX_BIDI_PORT=9333." >&2
+  exit 3
+fi
+
+RESOLVED="$(resolve_profile "$PROFILE")"
+if [ -n "$RESOLVED" ] && in_use "$RESOLVED"; then
+  echo "firefox-agent: el perfil '$PROFILE' ya está abierto en otra ventana." >&2
+  echo "  Ciérralo tú y vuelve a intentar. No toco otras instancias." >&2
+  exit 2
+fi
+
+ARGS=(--remote-debugging-port "$PORT" --no-remote)
+if [ -n "$RESOLVED" ]; then
+  ARGS+=(--profile "$RESOLVED")
+  echo "firefox-agent: perfil '$PROFILE' ($RESOLVED)"
+else
+  ARGS+=(-P "$PROFILE")
+  echo "firefox-agent: perfil '$PROFILE'"
+fi
+
+echo "firefox-agent: abriendo en ws://127.0.0.1:$PORT/session"
+setsid "$FF" "${ARGS[@]}" >/dev/null 2>&1 &
+
+for _ in $(seq 1 40); do
+  if command -v ss >/dev/null 2>&1 && ss -ltn 2>/dev/null | grep -q ":$PORT "; then
+    echo "firefox-agent: listo."
+    exit 0
+  fi
+  sleep 0.5
+done
+echo "firefox-agent: no confirmé el puerto $PORT; revisa si Firefox abrió." >&2
+exit 4
