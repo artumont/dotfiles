@@ -93,10 +93,49 @@ async function evaluate(expression) {
   if (res.type === 'exception') {
     throw new Error(res.exceptionDetails?.exception?.description || res.exceptionDetails?.text || 'error de JS');
   }
-  const v = res.result;
-  if (!v || v.type === 'undefined') return null;
-  if ('value' in v) return v.value;
-  return v;
+  return fromRemote(res.result);
+}
+
+// BiDi returns objects and arrays as lists of [key, RemoteValue] pairs, so a
+// plain object arrives as an array and its properties read as undefined.
+function fromRemote(v) {
+  if (!v || typeof v !== 'object') return v;
+  switch (v.type) {
+    case 'undefined': return undefined;
+    case 'null': return null;
+    case 'string': case 'number': case 'boolean': case 'bigint': return v.value;
+    case 'array': case 'set': return (v.value || []).map(fromRemote);
+    case 'object': {
+      const o = {};
+      for (const [k, val] of v.value || []) {
+        o[typeof k === 'string' ? k : String(fromRemote(k))] = fromRemote(val);
+      }
+      return o;
+    }
+    case 'map': {
+      const o = {};
+      for (const [k, val] of v.value || []) o[String(fromRemote(k))] = fromRemote(val);
+      return o;
+    }
+    default: return 'value' in v ? v.value : v;
+  }
+}
+
+// Firefox applies setViewport but never sends the reply, so fire it off and
+// swallow the dangling id instead of waiting forever.
+function sendNoReply(method, params) {
+  const id = ++seq;
+  pending.set(id, () => {});
+  ws.send(JSON.stringify({ id, method, params }));
+}
+
+async function waitHeight(target, shrink = false) {
+  for (let i = 0; i < 50; i++) {
+    let h = null;
+    try { h = await evaluate('innerHeight'); } catch {}
+    if (h !== null && (shrink ? h <= target + 20 : h >= target - 20)) return;
+    await new Promise((r) => setTimeout(r, 100));
+  }
 }
 
 const findElement = (target) => `
@@ -200,12 +239,27 @@ const tools = [
   },
   {
     name: 'click',
-    description: 'Clic real en un selector CSS o en un elemento por su texto.',
-    inputSchema: { type: 'object', properties: { target: { type: 'string' } }, required: ['target'] },
-    handler: async ({ target }) => {
+    description: 'Clic real en un selector CSS, por texto, o en coordenadas x/y.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        target: { type: 'string' },
+        x: { type: 'number' },
+        y: { type: 'number' },
+        dx: { type: 'number' },
+        dy: { type: 'number' },
+      },
+    },
+    handler: async ({ target, x, y, dx = 0, dy = 0 }) => {
       await attach();
-      const hit = await evaluate(findElement(target));
-      if (!hit) throw new Error(`no encontré elemento: ${target}`);
+      let hit;
+      if (Number.isFinite(x) && Number.isFinite(y)) {
+        hit = { x, y, tag: 'punto' };
+      } else {
+        const found = await evaluate(findElement(target));
+        if (!found) throw new Error(`no encontré elemento: ${target}`);
+        hit = { x: found.x + dx, y: found.y + dy, tag: found.tag };
+      }
       await call('input.performActions', {
         context: await context(),
         actions: [{
@@ -217,7 +271,28 @@ const tools = [
           ],
         }],
       });
-      return `clic en <${hit.tag}> ${target}`;
+      return `clic en <${hit.tag}> ${target ?? `${Math.round(hit.x)},${Math.round(hit.y)}`}`;
+    },
+  },
+  {
+    name: 'cookies',
+    description: 'Borra cookies del dominio actual o del indicado, para repetir un desafío ya resuelto.',
+    inputSchema: { type: 'object', properties: { domain: { type: 'string' } } },
+    handler: async ({ domain }) => {
+      await attach();
+      let host = domain;
+      if (!host) {
+        const href = await evaluate('location.href').catch(() => '');
+        try { host = new URL(href).hostname; } catch { throw new Error(`no pude leer el dominio: ${href || 'vacío'}`); }
+      }
+      const before = await call('storage.getCookies', { filter: { domain: host } });
+      await call('storage.deleteCookies', { filter: { domain: host } });
+      const after = await call('storage.getCookies', { filter: { domain: host } });
+      const count = (r) => {
+        if (Array.isArray(r.cookies)) return r.cookies.length;
+        return Object.values(r.splitByCookieStore ?? {}).reduce((n, s) => n + (s.cookies?.length ?? 0), 0);
+      };
+      return `${count(before)} cookies en ${host}, quedan ${count(after)}`;
     },
   },
   {
@@ -265,16 +340,45 @@ const tools = [
     },
   },
   {
+    name: 'preload',
+    description: 'Inyecta un script que corre antes de cada carga (por defecto oculta navigator.webdriver).',
+    inputSchema: { type: 'object', properties: { code: { type: 'string' } } },
+    handler: async ({ code }) => {
+      await attach();
+      const decl = code ?? `() => {
+        try { Object.defineProperty(Navigator.prototype, 'webdriver', { get: () => false, configurable: true }); } catch {}
+      }`;
+      const res = await call('script.addPreloadScript', { functionDeclaration: decl });
+      return `preload ${res.script}`;
+    },
+  },
+  {
     name: 'screenshot',
     description: 'Captura la pestaña actual a un PNG.',
     inputSchema: { type: 'object', properties: { path: { type: 'string' }, fullPage: { type: 'boolean' } } },
     handler: async ({ path = '/tmp/firefox-shot.png', fullPage }) => {
       await attach();
-      const params = { context: await context() };
+      const ctx = await context();
+      const params = { context: ctx };
+      let restore = null;
       if (fullPage) {
-        params.clip = await evaluate(`({ x: 0, y: 0, width: document.documentElement.scrollWidth, height: document.documentElement.scrollHeight })`);
+        // Firefox clamps clip to the viewport and never answers setViewport,
+        // so send it without waiting and poll innerHeight until it lands.
+        const box = await evaluate(`({ width: document.documentElement.scrollWidth, height: document.documentElement.scrollHeight })`);
+        const target = { width: Math.ceil(box.width), height: Math.ceil(box.height) };
+        restore = await evaluate('innerHeight');
+        sendNoReply('browsingContext.setViewport', { context: ctx, viewport: target });
+        await waitHeight(target.height);
       }
-      const { data } = await call('browsingContext.captureScreenshot', params);
+      let data;
+      try {
+        ({ data } = await call('browsingContext.captureScreenshot', params));
+      } finally {
+        if (fullPage) {
+          sendNoReply('browsingContext.setViewport', { context: ctx, viewport: null });
+          await waitHeight(restore, true);
+        }
+      }
       const buf = Buffer.from(data, 'base64');
       writeFileSync(path, buf);
       return `${path} (${buf.length} bytes)`;
