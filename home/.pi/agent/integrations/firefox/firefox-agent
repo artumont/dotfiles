@@ -82,7 +82,12 @@ in_use() {
       firefox*|*/firefox*) return 0 ;;
     esac
   done
-  [ -e "$p/lock" ] && readlink "$p/lock" 2>/dev/null | grep -q ':+' && return 0
+  # A killed instance leaves the lock symlink behind; only a live target counts.
+  if [ -e "$p/lock" ]; then
+    local lock_target
+    lock_target="$(readlink -f "$p/lock" 2>/dev/null || true)"
+    readlink "$p/lock" 2>/dev/null | grep -q ':+' && [ -n "$lock_target" ] && [ -e "$lock_target" ] && return 0
+  fi
   return 1
 }
 

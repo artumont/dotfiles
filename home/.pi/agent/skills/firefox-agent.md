@@ -28,6 +28,23 @@ MCP server: `~/.pi/agent/integrations/firefox/firefox-bidi-mcp.mjs`, registered 
 | `cookies` | delete cookies for the current or given domain, to replay a challenge |
 | `evaluate` | run JS in the page, returns the value |
 | `screenshot` | PNG of the viewport or full page |
+| `key` | key with modifiers: `Ctrl+Alt+1`, `Ctrl+Shift+8`, `Ctrl+A` |
+| `docs` | Google Docs: `status`, `focus`, `cursor`, `clear`, `write`, `insert`, `read` |
+
+## Google Docs
+
+`docs-tools.mjs` in the same directory extends the firefox MCP (single BiDi session, no second server). Docs renders the body to canvas, so the DOM has no text nodes: never try to read or select the document with `evaluate`.
+
+- `docs write` takes a minimal markdown spec: `# ` Titulo style, `## ` Heading 1, `### ` Heading 2, `- ` bullets, `1. ` numbered, `---` page break, anything else a normal paragraph, `**bold**` inline. It clears the document first; `insert` appends at the caret without clearing and without moving it.
+- `docs cursor find="texto"` uses the in-app Ctrl+F find bar: it types the needle, cycles with Enter (`occurrence`), closes with Escape and then collapses the caret to `start` or `end`, or keeps the match selected with `where=select`. This is the only reliable way to place the caret, since there is no DOM to click.
+- `docs read` opens a temporary tab on `/export?format=txt`. Anonymous sessions load an empty page, so fall back to `screenshot` for verification.
+- Paragraph styles come from the toolbar dropdown (title) or `Ctrl+Alt+1/2` (headings, `#`-free). Enter after a heading returns to normal text.
+- Never type a heading that starts with `N. `: Docs auto-converts it to a numbered list and swallows the number.
+- Exiting a list is one Enter plus the same toggle key; a single Enter only adds another list item.
+- The document title stays read-only ("Test doc") when the session is anonymous: clicking the title focuses the body instead. Do not retry in a loop.
+- `docs image path=...` reads the file in the MCP process, builds a `File` inside the page and dispatches synthetic `dragenter`/`dragover`/`drop` on the editor. Verified working with a signed-in account (inserted, checked, deleted); an anonymous session gets "No se insertaron las imágenes en el documento. Para subir imágenes, debes acceder a tu cuenta." The image lands at the drop point (`x`/`y`), not at the caret, and needs a click plus Delete to remove.
+- Do not try the system clipboard: `wl-copy` content is invisible to this Firefox (Wayland selection not bridged) and `Ctrl+V` silently does nothing. The native upload dialog cannot be driven either, there is no xdotool/wtype on this host.
+- Every BiDi call has its own timeout (`FIREFOX_BIDI_TIMEOUT_MS`, default 25000 ms) so one lost reply cannot wedge the server queue. If a tool still hangs, kill the MCP process and reconnect; the Firefox instance stays up.
 
 ## Patterns
 

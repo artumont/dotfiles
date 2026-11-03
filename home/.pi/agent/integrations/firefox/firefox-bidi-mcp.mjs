@@ -1,11 +1,32 @@
 #!/usr/bin/env node
-// Servidor MCP (stdio) que controla un Firefox abierto por WebDriver BiDi.
-// Requiere: firefox-agent (Firefox con --remote-debugging-port).
-// Sin dependencias: usa el WebSocket integrado de Node.
+// stdio MCP server that drives a Firefox instance over WebDriver BiDi.
+// Needs `firefox-agent` (Firefox with --remote-debugging-port) running first.
+// No dependencies: uses the WebSocket built into Node.
+//
+// Layout:
+//   1. config
+//   2. BiDi connection (send / call / attach / detach / context)
+//   3. page helpers (evaluate, fromRemote, findElement, waitHeight)
+//   4. input helpers (clickAt, typeKeys)
+//   5. tools
+//   6. MCP protocol
+//   7. stdio transport
 import { writeFileSync, writeSync } from 'node:fs';
+import { makeDocsTools } from './docs-tools.mjs';
+
+// ---------------------------------------------------------------- config
 
 const PORT = Number(process.env.FIREFOX_BIDI_PORT || 9222);
 const ENDPOINT = `ws://127.0.0.1:${PORT}/session`;
+
+// A lost BiDi reply must never wedge the request queue, so every call has its
+// own deadline.
+const CALL_TIMEOUT = Number(process.env.FIREFOX_BIDI_TIMEOUT_MS || 25000);
+
+const log = (...a) => process.stderr.write(a.join(' ') + '\n');
+const q = (s) => JSON.stringify(s);
+
+// -------------------------------------------------------- BiDi connection
 
 let ws = null;
 let attaching = null;
@@ -13,13 +34,16 @@ let seq = 0;
 let ctxId = null;
 const pending = new Map();
 
-const log = (...a) => process.stderr.write(a.join(' ') + '\n');
-const q = (s) => JSON.stringify(s);
-
 function send(method, params = {}) {
   return new Promise((resolve) => {
     const id = ++seq;
-    pending.set(id, resolve);
+    const timer = setTimeout(() => {
+      if (!pending.has(id)) return;
+      pending.delete(id);
+      log('timeout', method);
+      resolve({ type: 'error', error: 'timeout', message: `sin respuesta en ${CALL_TIMEOUT} ms` });
+    }, CALL_TIMEOUT);
+    pending.set(id, (res) => { clearTimeout(timer); resolve(res); });
     ws.send(JSON.stringify({ id, method, params }));
   });
 }
@@ -46,7 +70,8 @@ async function attach() {
         `No pude conectar a ${ENDPOINT}. Corre firefox-agent primero.`)), { once: true });
     });
     sock.addEventListener('message', (e) => {
-      const m = JSON.parse(e.data);
+      let m;
+      try { m = JSON.parse(e.data); } catch { return; }
       if (m.id && pending.has(m.id)) {
         const done = pending.get(m.id);
         pending.delete(m.id);
@@ -82,6 +107,8 @@ async function context() {
   return ctxId;
 }
 
+// ---------------------------------------------------------- page helpers
+
 async function evaluate(expression) {
   const res = await call('script.evaluate', {
     expression,
@@ -96,8 +123,8 @@ async function evaluate(expression) {
   return fromRemote(res.result);
 }
 
-// BiDi returns objects and arrays as lists of [key, RemoteValue] pairs, so a
-// plain object arrives as an array and its properties read as undefined.
+// BiDi returns objects and arrays as [key, RemoteValue] pairs, so a plain
+// object arrives as an array and its properties read as undefined.
 function fromRemote(v) {
   if (!v || typeof v !== 'object') return v;
   switch (v.type) {
@@ -154,6 +181,34 @@ const findElement = (target) => `
   const r = el.getBoundingClientRect();
   return { x: r.x + r.width / 2, y: r.y + r.height / 2, tag: el.tagName.toLowerCase() };
 })()`;
+
+// --------------------------------------------------------- input helpers
+
+async function clickAt(x, y) {
+  await call('input.performActions', {
+    context: await context(),
+    actions: [{
+      type: 'pointer', id: 'mouse', parameters: { pointerType: 'mouse' },
+      actions: [
+        { type: 'pointerMove', x: Math.round(x), y: Math.round(y), origin: 'viewport' },
+        { type: 'pointerDown', button: 0 },
+        { type: 'pointerUp', button: 0 },
+      ],
+    }],
+  });
+}
+
+async function typeKeys(actions) {
+  await call('input.performActions', { context: await context(), actions: [{ type: 'key', id: 'kb', actions }] });
+}
+
+const SPECIAL_KEYS = {
+  Enter: '\uE007', Tab: '\uE004', Escape: '\uE00C', Backspace: '\uE003', Delete: '\uE017',
+  ArrowLeft: '\uE012', ArrowUp: '\uE013', ArrowRight: '\uE014', ArrowDown: '\uE015',
+  PageUp: '\uE00E', PageDown: '\uE00F', Home: '\uE011', End: '\uE010', Space: '\u0020',
+};
+
+// ---------------------------------------------------------------- tools
 
 const tools = [
   {
@@ -260,17 +315,7 @@ const tools = [
         if (!found) throw new Error(`no encontré elemento: ${target}`);
         hit = { x: found.x + dx, y: found.y + dy, tag: found.tag };
       }
-      await call('input.performActions', {
-        context: await context(),
-        actions: [{
-          type: 'pointer', id: 'mouse', parameters: { pointerType: 'mouse' },
-          actions: [
-            { type: 'pointerMove', x: Math.round(hit.x), y: Math.round(hit.y), origin: 'viewport' },
-            { type: 'pointerDown', button: 0 },
-            { type: 'pointerUp', button: 0 },
-          ],
-        }],
-      });
+      await clickAt(hit.x, hit.y);
       return `clic en <${hit.tag}> ${target ?? `${Math.round(hit.x)},${Math.round(hit.y)}`}`;
     },
   },
@@ -285,13 +330,13 @@ const tools = [
         const href = await evaluate('location.href').catch(() => '');
         try { host = new URL(href).hostname; } catch { throw new Error(`no pude leer el dominio: ${href || 'vacío'}`); }
       }
-      const before = await call('storage.getCookies', { filter: { domain: host } });
-      await call('storage.deleteCookies', { filter: { domain: host } });
-      const after = await call('storage.getCookies', { filter: { domain: host } });
       const count = (r) => {
         if (Array.isArray(r.cookies)) return r.cookies.length;
         return Object.values(r.splitByCookieStore ?? {}).reduce((n, s) => n + (s.cookies?.length ?? 0), 0);
       };
+      const before = await call('storage.getCookies', { filter: { domain: host } });
+      await call('storage.deleteCookies', { filter: { domain: host } });
+      const after = await call('storage.getCookies', { filter: { domain: host } });
       return `${count(before)} cookies en ${host}, quedan ${count(after)}`;
     },
   },
@@ -315,8 +360,8 @@ const tools = [
       if (!ok) throw new Error(`no pude enfocar: ${target}`);
       const actions = [];
       for (const ch of text) actions.push({ type: 'keyDown', value: ch }, { type: 'keyUp', value: ch });
-      if (submit) actions.push({ type: 'keyDown', value: '\uE007' }, { type: 'keyUp', value: '\uE007' });
-      await call('input.performActions', { context: await context(), actions: [{ type: 'key', id: 'kb', actions }] });
+      if (submit) actions.push({ type: 'keyDown', value: SPECIAL_KEYS.Enter }, { type: 'keyUp', value: SPECIAL_KEYS.Enter });
+      await typeKeys(actions);
       return `${text.length} caracteres en ${target}${submit ? ' + Enter' : ''}`;
     },
   },
@@ -326,16 +371,8 @@ const tools = [
     inputSchema: { type: 'object', properties: { key: { type: 'string' } }, required: ['key'] },
     handler: async ({ key }) => {
       await attach();
-      const map = {
-        Enter: '\uE007', Tab: '\uE004', Escape: '\uE00C', Backspace: '\uE003', Delete: '\uE017',
-        ArrowLeft: '\uE012', ArrowUp: '\uE013', ArrowRight: '\uE014', ArrowDown: '\uE015',
-        PageUp: '\uE00E', PageDown: '\uE00F', Home: '\uE011', End: '\uE010', Space: '\u0020',
-      };
-      const v = map[key] ?? key;
-      await call('input.performActions', {
-        context: await context(),
-        actions: [{ type: 'key', id: 'kb', actions: [{ type: 'keyDown', value: v }, { type: 'keyUp', value: v }] }],
-      });
+      const v = SPECIAL_KEYS[key] ?? key;
+      await typeKeys([{ type: 'keyDown', value: v }, { type: 'keyUp', value: v }]);
       return `tecla ${key}`;
     },
   },
@@ -359,11 +396,10 @@ const tools = [
     handler: async ({ path = '/tmp/firefox-shot.png', fullPage }) => {
       await attach();
       const ctx = await context();
-      const params = { context: ctx };
       let restore = null;
       if (fullPage) {
-        // Firefox clamps clip to the viewport and never answers setViewport,
-        // so send it without waiting and poll innerHeight until it lands.
+        // Firefox clamps the clip to the viewport, so grow the viewport to the
+        // document size first and shrink it back afterwards.
         const box = await evaluate(`({ width: document.documentElement.scrollWidth, height: document.documentElement.scrollHeight })`);
         const target = { width: Math.ceil(box.width), height: Math.ceil(box.height) };
         restore = await evaluate('innerHeight');
@@ -372,7 +408,7 @@ const tools = [
       }
       let data;
       try {
-        ({ data } = await call('browsingContext.captureScreenshot', params));
+        ({ data } = await call('browsingContext.captureScreenshot', { context: ctx }));
       } finally {
         if (fullPage) {
           sendNoReply('browsingContext.setViewport', { context: ctx, viewport: null });
@@ -384,7 +420,10 @@ const tools = [
       return `${path} (${buf.length} bytes)`;
     },
   },
+  ...makeDocsTools({ call, evaluate, context, attach }),
 ];
+
+// --------------------------------------------------------- MCP protocol
 
 const ok = (id, result) => ({ jsonrpc: '2.0', id, result });
 const err = (id, code, message) => ({ jsonrpc: '2.0', id, error: { code, message } });
@@ -415,6 +454,8 @@ async function handle(msg) {
   if (!id) return null;
   return err(id, -32601, `método no soportado: ${method}`);
 }
+
+// ------------------------------------------------------ stdio transport
 
 let buf = '';
 let inflight = 0;
