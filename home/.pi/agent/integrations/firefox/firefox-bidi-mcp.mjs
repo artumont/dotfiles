@@ -99,24 +99,40 @@ async function detach() {
 }
 
 async function context() {
-  if (ctxId) return ctxId;
+  // The cached id dies with its tab, so validate it against the live tree and
+  // fall back to a Docs tab (or the first one) instead of failing every call.
   const tree = await call('browsingContext.getTree', { maxDepth: 1 });
-  const top = tree.contexts[0];
-  if (!top) throw new Error('Firefox no tiene pestañas abiertas');
-  ctxId = top.context;
+  const list = tree.contexts || [];
+  if (ctxId && list.some((c) => c.context === ctxId)) return ctxId;
+  const pick = list.find((c) => /docs\.google\.com\/document/.test(c.url || '')) || list[0];
+  if (!pick) throw new Error('Firefox no tiene pestañas abiertas');
+  ctxId = pick.context;
   return ctxId;
 }
+
+const isStaleContext = (e) => /no such frame|Browsing Context .* not found|invalid context/i.test(e?.message || '');
 
 // ---------------------------------------------------------- page helpers
 
 async function evaluate(expression) {
-  const res = await call('script.evaluate', {
+  const run = () => call('script.evaluate', {
     expression,
-    target: { context: await context() },
+    target: { context: ctxId },
     awaitPromise: true,
     resultOwnership: 'none',
     serializationOptions: { maxObjectDepth: 3 },
   });
+  await context();
+  let res;
+  try {
+    res = await run();
+  } catch (e) {
+    // Tab closed or reloaded under us: drop the cached id and retry once.
+    if (!isStaleContext(e)) throw e;
+    ctxId = null;
+    await context();
+    res = await run();
+  }
   if (res.type === 'exception') {
     throw new Error(res.exceptionDetails?.exception?.description || res.exceptionDetails?.text || 'error de JS');
   }

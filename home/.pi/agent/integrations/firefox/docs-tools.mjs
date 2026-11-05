@@ -12,7 +12,9 @@
 //   styles    -> toolbar dropdown for "Título", Ctrl+Alt+1/2 for headings
 //   tables    -> Insert > Table grid picker, Tab between cells
 //   images    -> synthetic drag events carrying a File built in the page
-import { readFileSync, statSync } from 'node:fs';
+import { readFileSync, readdirSync, statSync, unlinkSync } from 'node:fs';
+import { join } from 'node:path';
+import { homedir } from 'node:os';
 
 const KEYS = {
   Ctrl: '\uE009', Shift: '\uE008', Alt: '\uE00A', Meta: '\uE03D',
@@ -29,6 +31,21 @@ const MIME = {
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// Firefox downloads the export here; there is no way to read the tab instead,
+// because Docs answers /export with a file and leaves the tab on about:blank.
+const DOWNLOAD_DIR = process.env.FIREFOX_DOWNLOAD_DIR || join(homedir(), 'Downloads');
+
+const recentTxt = () => {
+  try {
+    return readdirSync(DOWNLOAD_DIR)
+      .filter((f) => f.endsWith('.txt'))
+      .map((f) => {
+        try { return { f, mtime: statSync(join(DOWNLOAD_DIR, f)).mtimeMs }; } catch { return null; }
+      })
+      .filter(Boolean);
+  } catch { return []; }
+};
 
 const NORMALIZE_JS = `const norm = (s) => (s || '').replace(/\\s+/g, ' ').trim();`;
 
@@ -414,31 +431,47 @@ export function makeDocsTools({ call, evaluate, context, attach }) {
     return blocks.length;
   };
 
-  // Text export in a throwaway tab. Anonymous sessions load an empty page, so
-  // this is only a convenience check; screenshots are the reliable one.
+  // Export the document to txt and read the downloaded file. The download tab
+  // stays on about:blank, so the file is the only source of truth. The file is
+  // deleted after reading so ~/Downloads does not fill with copies.
   const readDoc = async () => {
     const id = await evaluate(`(() => { const m = location.href.match(/document\\/d\\/([\\w-]+)/); return m ? m[1] : ''; })()`);
     if (!id) throw new Error('la pestana actual no es un documento de Google Docs');
+
+    const before = new Map(recentTxt().map((x) => [x.f, x.mtime]));
     const tab = await call('browsingContext.create', { type: 'tab', background: true });
     try {
       await call('browsingContext.navigate', {
         context: tab.context,
         url: `https://docs.google.com/document/d/${id}/export?format=txt`,
-        wait: 'complete',
-      });
-      await sleep(500);
-      const res = await call('script.evaluate', {
-        expression: 'document.body ? document.body.innerText : ""',
-        target: { context: tab.context },
-        awaitPromise: true,
-        resultOwnership: 'none',
-      });
-      const v = res.result;
-      if (v?.type === 'string') return v.value;
-      return (v?.value ?? []).map(([, val]) => val?.value ?? '').join('');
+        wait: 'none',
+      }).catch(() => {});
     } finally {
       try { await call('browsingContext.close', { context: tab.context }); } catch {}
     }
+
+    let file = null;
+    const deadline = Date.now() + 12000;
+    while (!file && Date.now() < deadline) {
+      await sleep(250);
+      const fresh = recentTxt().filter((x) => !before.has(x.f) || before.get(x.f) !== x.mtime);
+      if (fresh.length) file = fresh.sort((a, b) => b.mtime - a.mtime)[0];
+    }
+    if (!file) throw new Error(`la exportacion no dejo un .txt en ${DOWNLOAD_DIR} (¿sesion sin cuenta?)`);
+
+    const path = join(DOWNLOAD_DIR, file.f);
+    const text = readFileSync(path, 'utf8');
+    try { unlinkSync(path); } catch {}
+    return text;
+  };
+
+  // Compact state check: whitespace collapsed, empty lines dropped, one line
+  // per paragraph or table row. Cheaper than a screenshot for verification.
+  const checkDoc = async () => {
+    const text = await readDoc();
+    const lines = text.split('\n').map((l) => l.replace(/[ \t]+/g, ' ').trim()).filter(Boolean);
+    const body = lines.join(' | ');
+    return `${lines.length} lineas, ${body.length} chars: ${body}`;
   };
 
   // ---------------------------------------------------------------- tools
@@ -446,11 +479,11 @@ export function makeDocsTools({ call, evaluate, context, attach }) {
   return [
     {
       name: 'docs',
-      description: 'Edita un documento de Google Docs abierto. action=focus (caret al inicio o al final), cursor (mueve el cursor o selecciona el texto de find; where=start|end|select, occurrence=N para la N-esima coincidencia), clear (borra todo), write (limpia y escribe la especificacion), insert (escribe al final sin limpiar), read (texto exportado del documento), status. La especificacion es markdown minimo: "# Titulo" (estilo Titulo), "## Seccion" (Encabezado 1), "### Subseccion" (Encabezado 2), "- vinetas", "1. numerada", "---" salto de pagina, texto suelto = parrafo normal. Admite **negritas** y tablas: filas consecutivas con formato "| a | b |" (maximo 5 filas por el selector de Docs). action=text escribe en el caret sin Enter. action=image inserta una imagen local (path, opcional x/y del punto de suelte).',
+      description: 'Edita un documento de Google Docs abierto. action=focus (caret al inicio o al final), cursor (mueve el cursor o selecciona el texto de find; where=start|end|select, occurrence=N para la N-esima coincidencia), clear (borra todo), write (limpia y escribe la especificacion), insert (escribe al final sin limpiar), read (texto exportado del documento, via descarga a ~/Downloads), check (resumen compacto en una linea para verificar el estado, mas barato que un screenshot), status. La especificacion es markdown minimo: "# Titulo" (estilo Titulo), "## Seccion" (Encabezado 1), "### Subseccion" (Encabezado 2), "- vinetas", "1. numerada", "---" salto de pagina, texto suelto = parrafo normal. Admite **negritas** y tablas: filas consecutivas con formato "| a | b |" (maximo 5 filas por el selector de Docs). action=text escribe en el caret sin Enter. action=image inserta una imagen local (path, opcional x/y del punto de suelte).',
       inputSchema: {
         type: 'object',
         properties: {
-          action: { type: 'string', enum: ['status', 'focus', 'clear', 'write', 'insert', 'text', 'image', 'read', 'cursor'] },
+          action: { type: 'string', enum: ['status', 'focus', 'clear', 'write', 'insert', 'text', 'image', 'read', 'check', 'cursor'] },
           spec: { type: 'string' },
           find: { type: 'string' },
           path: { type: 'string' },
@@ -479,6 +512,7 @@ export function makeDocsTools({ call, evaluate, context, attach }) {
           return 'documento vacio';
         }
         if (action === 'read') return readDoc();
+        if (action === 'check') return checkDoc();
         if (action === 'text') { await typeRich(spec || ''); return 'texto escrito'; }
         if (action === 'image') return insertImage(path, { x, y });
         if (action === 'cursor') return findText(find, { occurrence: occurrence || 1, where: where || 'end' });
