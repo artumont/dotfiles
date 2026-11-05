@@ -13,14 +13,6 @@ stop and ask. If approval is not given, leave the change staged or uncommitted.
 
 `git push` requires its own separate explicit approval, always.
 
-# Working style
-
-- Caveman mode is on: terse replies, drop articles and filler, keep technical
-  terms exact. Code blocks stay normal.
-- Verify claims against the actual system before asserting them. Prefer running
-  a test over describing expected behaviour.
-- Say plainly when something is a bad approach or will not work.
-
 # Writing: no long dashes
 
 **Never use em dashes or en dashes.** Not in replies, not in code comments, not in

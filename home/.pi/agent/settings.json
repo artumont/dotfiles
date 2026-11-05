@@ -29,10 +29,10 @@
     "-builtin:mcp"
   ],
   "extensionChangelogVersions": {
-    "{\"source\":\"npm:pi-mcp-adapter\",\"scope\":\"user\"}": "7.0.0",
+    "{\"source\":\"npm:pi-mcp-adapter\",\"scope\":\"user\"}": "7.0.1",
     "{\"source\":\"npm:pi-agentsmd\",\"scope\":\"user\"}": "0.2.1",
-    "{\"source\":\"npm:pi-web-access\",\"scope\":\"user\"}": "0.46.0",
-    "{\"source\":\"npm:pi-lens\",\"scope\":\"user\"}": "4.4.8",
-    "{\"source\":\"npm:pi-subagents\",\"scope\":\"user\"}": "0.84.0"
+    "{\"source\":\"npm:pi-web-access\",\"scope\":\"user\"}": "0.47.0",
+    "{\"source\":\"npm:pi-lens\",\"scope\":\"user\"}": "4.4.9",
+    "{\"source\":\"npm:pi-subagents\",\"scope\":\"user\"}": "0.85.0"
   }
 }
