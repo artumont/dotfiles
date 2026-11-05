@@ -197,14 +197,22 @@ export function makeDocsTools({ call, evaluate, context, attach }) {
     await click(item.x, item.y);
     await sleep(400);
 
+    // Geometry must come from the unhighlighted grid, not the picker box: the
+    // picker adds padding and a status line, so its size divided by the cell
+    // side gives the wrong row count and the click lands outside the cells.
     const grid = await evaluate(`(() => {
       const pick = document.querySelector('.goog-dimension-picker');
       if (!pick) return null;
-      const cell = document.querySelector('.goog-dimension-picker-highlighted');
-      const box = (cell || pick).getBoundingClientRect();
-      const r = pick.getBoundingClientRect();
-      const side = Math.round(box.width) || 18;
-      return { x: r.x, y: r.y, side, cols: Math.round(r.width / side), rows: Math.round(r.height / side) };
+      const hl = document.querySelector('.goog-dimension-picker-highlighted');
+      const un = document.querySelector('.goog-dimension-picker-unhighlighted');
+      const box = un || hl;
+      if (!box) return null;
+      const r = box.getBoundingClientRect();
+      const side = Math.round(hl ? hl.getBoundingClientRect().width : r.width) || 18;
+      return {
+        x: r.x, y: r.y, side,
+        cols: Math.floor(r.width / side), rows: Math.floor(r.height / side),
+      };
     })()`);
     if (!grid) throw new Error('no aparecio el selector de tamano de tabla');
     const wantRows = Math.max(1, Math.min(rows, grid.rows));
@@ -242,17 +250,20 @@ export function makeDocsTools({ call, evaluate, context, attach }) {
   const fillTable = async (rows) => {
     const cols = Math.max(...rows.map((r) => r.length));
     const size = await insertTable(rows.length, cols);
+    const created = size.rows;
     for (let r = 0; r < rows.length; r++) {
       for (let c = 0; c < cols; c++) {
         const text = rows[r][c] ?? '';
         if (text) await typeRich(text);
+        // Tab on the very last cell would leave an empty trailing row. Every
+        // other Tab is fine: past the last row it appends one, which is how a
+        // table longer than the grid picker gets built.
         const last = r === rows.length - 1 && c === cols - 1;
-        // Tab on the last cell would append a row, so stop before it.
         if (!last) await sendKeys(['Tab']);
       }
     }
     await sleep(200);
-    return `${size.rows}x${size.cols}`;
+    return `${created}/${rows.length}x${size.cols}`;
   };
 
   // --------------------------------------------------------------- images
@@ -297,7 +308,7 @@ export function makeDocsTools({ call, evaluate, context, attach }) {
 
   // Caret placement goes through the in-app find bar: it types the needle,
   // cycles with Enter, closes with Escape and collapses onto the match.
-  const findText = async (needle, { occurrence = 1, where = 'end' } = {}) => {
+  const findText = async (needle, { occurrence = 1, where = 'end', tabs = 0 } = {}) => {
     if (!needle) throw new Error('falta el texto a buscar');
     await sendKeys([{ key: 'f', mods: ['Ctrl'] }]);
     await sleep(250);
@@ -313,7 +324,43 @@ export function makeDocsTools({ call, evaluate, context, attach }) {
     else if (where === 'start') await sendKeys(['ArrowLeft']);
     else if (where !== 'select') throw new Error(`where invalido: ${where}`);
     await sleep(120);
-    return `cursor en "${needle}" (${where})`;
+    for (let i = 0; i < tabs; i++) {
+      await sendKeys(['Tab']);
+      await sleep(150);
+    }
+    return `cursor en "${needle}" (${where})${tabs ? ` + ${tabs} Tab` : ''}`;
+  };
+
+  // ------------------------------------------------------------- table rows
+
+  // "a|b|c" or an array; an empty cell still advances the caret.
+  const splitCells = (src) => (Array.isArray(src) ? src : String(src || '').split('|'))
+    .map((c) => String(c == null ? '' : c).trim());
+
+  const fillCells = async (cells) => {
+    for (let i = 0; i < cells.length; i++) {
+      if (cells[i]) await typeRich(cells[i]);
+      if (i < cells.length - 1) await sendKeys(['Tab']);
+    }
+    await sleep(250);
+  };
+
+  // Ctrl+End lands in the empty paragraph Docs keeps after a table, so step up
+  // into the last row and walk to the last cell: the Tab that leaves it is the
+  // one that appends the row. The cell count must match the table's columns.
+  const appendRow = async (cells) => {
+    if (!cells.length) throw new Error('faltan celdas');
+    await focusDoc('end');
+    await sleep(250);
+    await sendKeys(['ArrowUp']);
+    await sleep(300);
+    for (let i = 0; i < cells.length; i++) {
+      await sendKeys(['Tab']);
+      await sleep(120);
+    }
+    await sleep(300);
+    await fillCells(cells);
+    return `fila agregada: ${cells.join(' | ')}`;
   };
 
   // **bold** spans toggle Ctrl+B around the wrapped text.
@@ -479,12 +526,14 @@ export function makeDocsTools({ call, evaluate, context, attach }) {
   return [
     {
       name: 'docs',
-      description: 'Edita un documento de Google Docs abierto. action=focus (caret al inicio o al final), cursor (mueve el cursor o selecciona el texto de find; where=start|end|select, occurrence=N para la N-esima coincidencia), clear (borra todo), write (limpia y escribe la especificacion), insert (escribe al final sin limpiar), read (texto exportado del documento, via descarga a ~/Downloads), check (resumen compacto en una linea para verificar el estado, mas barato que un screenshot), status. La especificacion es markdown minimo: "# Titulo" (estilo Titulo), "## Seccion" (Encabezado 1), "### Subseccion" (Encabezado 2), "- vinetas", "1. numerada", "---" salto de pagina, texto suelto = parrafo normal. Admite **negritas** y tablas: filas consecutivas con formato "| a | b |" (maximo 5 filas por el selector de Docs). action=text escribe en el caret sin Enter. action=image inserta una imagen local (path, opcional x/y del punto de suelte).',
+      description: 'Edita un documento de Google Docs abierto. action=focus (caret al inicio o al final), cursor (mueve el cursor o selecciona el texto de find; where=start|end|select, occurrence=N para la N-esima coincidencia), clear (borra todo), write (limpia y escribe la especificacion), insert (escribe al final sin limpiar), read (texto exportado del documento, via descarga a ~/Downloads), check (resumen compacto en una linea para verificar el estado, mas barato que un screenshot), status. Para tablas: action=append con cells="a|b|c" agrega una fila al final escribiendo una celda por Tab; action=cells escribe celdas desde el caret actual; action=cursor acepta tabs=N para avanzar N celdas despues de encontrar el texto. La especificacion es markdown minimo: "# Titulo" (estilo Titulo), "## Seccion" (Encabezado 1), "### Subseccion" (Encabezado 2), "- vinetas", "1. numerada", "---" salto de pagina, texto suelto = parrafo normal. Se admiten tablas: filas consecutivas con formato "| a | b |". Si hay mas filas que las que ofrece el selector de Docs, se agregan con Tab en la ultima celda, asi que el limite practico son las columnas. action=text escribe en el caret sin Enter. action=image inserta una imagen local (path, opcional x/y del punto de suelte).',
       inputSchema: {
         type: 'object',
         properties: {
-          action: { type: 'string', enum: ['status', 'focus', 'clear', 'write', 'insert', 'text', 'image', 'read', 'check', 'cursor'] },
+          action: { type: 'string', enum: ['status', 'focus', 'clear', 'write', 'insert', 'text', 'image', 'read', 'check', 'cursor', 'append', 'cells'] },
           spec: { type: 'string' },
+          cells: { type: ['string', 'array'], items: { type: 'string' } },
+          tabs: { type: 'number' },
           find: { type: 'string' },
           path: { type: 'string' },
           x: { type: 'number' },
@@ -494,7 +543,7 @@ export function makeDocsTools({ call, evaluate, context, attach }) {
         },
         required: ['action'],
       },
-      handler: async ({ action, spec, where, find, occurrence, path, x, y }) => {
+      handler: async ({ action, spec, where, find, occurrence, path, x, y, cells, tabs }) => {
         await attach();
 
         if (action === 'status') {
@@ -515,7 +564,14 @@ export function makeDocsTools({ call, evaluate, context, attach }) {
         if (action === 'check') return checkDoc();
         if (action === 'text') { await typeRich(spec || ''); return 'texto escrito'; }
         if (action === 'image') return insertImage(path, { x, y });
-        if (action === 'cursor') return findText(find, { occurrence: occurrence || 1, where: where || 'end' });
+        if (action === 'cursor') return findText(find, { occurrence: occurrence || 1, where: where || 'end', tabs: Number(tabs) || 0 });
+        if (action === 'append') return appendRow(splitCells(cells ?? spec));
+        if (action === 'cells') {
+          const list = splitCells(cells ?? spec);
+          if (!list.length) throw new Error('faltan celdas');
+          await fillCells(list);
+          return `celdas escritas: ${list.join(' | ')}`;
+        }
 
         const blocks = parseSpec(spec || '');
         if (!blocks.length) throw new Error('especificacion vacia');

@@ -29,7 +29,7 @@ MCP server: `~/.pi/agent/integrations/firefox/firefox-bidi-mcp.mjs`, registered 
 | `evaluate` | run JS in the page, returns the value |
 | `screenshot` | PNG of the viewport or full page |
 | `key` | key with modifiers: `Ctrl+Alt+1`, `Ctrl+Shift+8`, `Ctrl+A` |
-| `docs` | Google Docs: `status`, `focus`, `cursor`, `clear`, `write`, `insert`, `text`, `read`, `check`, `image` |
+| `docs` | Google Docs: `status`, `focus`, `cursor`, `clear`, `write`, `insert`, `text`, `append`, `cells`, `read`, `check`, `image` |
 
 ## Google Docs
 
@@ -48,6 +48,9 @@ Editing rules, learned the hard way:
 - `docs read` exports to txt and reads the file Firefox drops in `~/Downloads` (`FIREFOX_DOWNLOAD_DIR` overrides), deleting it afterwards. The export is a download, so the tab it opens stays on `about:blank`: never read the tab body, read the file.
 - `docs check` is the cheap state check: same export, but whitespace collapsed into one line plus line and char counts. Use it after every write instead of a screenshot; a screenshot is only for layout questions (table shape, styles).
 - Paragraph styles come from the toolbar dropdown (title) or `Ctrl+Alt+1/2` (headings, `#`-free). Enter after a heading returns to normal text.
+- Tables: `docs append cells="a|b|c"` adds a row at the end of the table in one call. It goes `Ctrl+End` (the empty paragraph Docs keeps after a table), `ArrowUp` into the last row, then `Tab` once per cell to walk out of the last cell, which is what makes Docs append the row. Pass exactly as many cells as the table has columns, otherwise the walk ends in the wrong place.
+- `docs cells cells="a|b|c"` fills cells from wherever the caret is, as one cell per Tab, without adding rows. `docs cursor find="text" tabs=N` parks the caret and then advances N cells, which is the quick way to reach a specific column.
+- A table write from the markdown spec is limited only by columns now (11 in the picker): rows past the picker's 5 are appended with Tab while filling.
 - Never type a heading that starts with `N. `: Docs auto-converts it to a numbered list and swallows the number.
 - Exiting a list is one Enter plus the same toggle key; a single Enter only adds another list item.
 - `docs status` reports title, URL and whether the tab is a Docs editor; `docs cursor find="..."` reports which match it landed on. Both are cheap, so run them before writing rather than assuming where the caret is.

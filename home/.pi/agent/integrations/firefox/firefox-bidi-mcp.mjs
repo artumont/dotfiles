@@ -100,14 +100,30 @@ async function detach() {
 
 async function context() {
   // The cached id dies with its tab, so validate it against the live tree and
-  // fall back to a Docs tab (or the first one) instead of failing every call.
+  // fall back to the visible tab instead of failing every call.
   const tree = await call('browsingContext.getTree', { maxDepth: 1 });
   const list = tree.contexts || [];
   if (ctxId && list.some((c) => c.context === ctxId)) return ctxId;
-  const pick = list.find((c) => /docs\.google\.com\/document/.test(c.url || '')) || list[0];
-  if (!pick) throw new Error('Firefox no tiene pestañas abiertas');
-  ctxId = pick.context;
+  ctxId = (await visibleContext(list)) || list[0]?.context;
+  if (!ctxId) throw new Error('Firefox no tiene pestañas abiertas');
   return ctxId;
+}
+
+// Background tabs report visibilityState hidden, which is the only signal BiDi
+// gives about which tab the user is looking at.
+async function visibleContext(list) {
+  for (const c of list) {
+    try {
+      const res = await call('script.evaluate', {
+        expression: 'document.visibilityState',
+        target: { context: c.context },
+        awaitPromise: false,
+        resultOwnership: 'none',
+      });
+      if (res?.result?.value === 'visible') return c.context;
+    } catch {}
+  }
+  return null;
 }
 
 const isStaleContext = (e) => /no such frame|Browsing Context .* not found|invalid context/i.test(e?.message || '');
