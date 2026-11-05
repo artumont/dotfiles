@@ -29,11 +29,19 @@ MCP server: `~/.pi/agent/integrations/firefox/firefox-bidi-mcp.mjs`, registered 
 | `evaluate` | run JS in the page, returns the value |
 | `screenshot` | PNG of the viewport or full page |
 | `key` | key with modifiers: `Ctrl+Alt+1`, `Ctrl+Shift+8`, `Ctrl+A` |
-| `docs` | Google Docs: `status`, `focus`, `cursor`, `clear`, `write`, `insert`, `read` |
+| `docs` | Google Docs: `status`, `focus`, `cursor`, `clear`, `write`, `insert`, `text`, `read`, `check`, `image` |
 
 ## Google Docs
 
 `docs-tools.mjs` in the same directory extends the firefox MCP (single BiDi session, no second server). Docs renders the body to canvas, so the DOM has no text nodes: never try to read or select the document with `evaluate`.
+
+Editing rules, learned the hard way:
+
+1. Text goes wherever the caret is, so confirm the caret before every write: `docs status`, then `docs cursor find="<text>"` and read back which match it landed on. Never assume it.
+2. Never assume the caret left a table. `docs insert` and `docs text` inside a cell write into that cell and can add rows, mangling the layout. To start below a table, click the page area under it by coordinates first, then confirm the caret again.
+3. Do not press Tab to move around: in Docs it switches table cells. To append to an existing line use `docs cursor find="<line>"` with `where=end` and then `docs text`.
+4. Verify with `docs check` after the first write of a batch, not after the whole batch, and stop if it looks wrong instead of continuing.
+5. `Ctrl+Z` is not a safe repair: it also undoes earlier good work. Fix a bad write by finding and selecting the junk text, or ask before touching anything.
 
 - `docs write` takes a minimal markdown spec: `# ` Titulo style, `## ` Heading 1, `### ` Heading 2, `- ` bullets, `1. ` numbered, `---` page break, anything else a normal paragraph, `**bold**` inline. It clears the document first; `insert` appends at the caret without clearing and without moving it.
 - `docs cursor find="texto"` uses the in-app Ctrl+F find bar: it types the needle, cycles with Enter (`occurrence`), closes with Escape and then collapses the caret to `start` or `end`, or keeps the match selected with `where=select`. This is the only reliable way to place the caret, since there is no DOM to click.
