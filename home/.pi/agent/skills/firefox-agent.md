@@ -1,6 +1,6 @@
 ---
 name: firefox-agent
-description: Use when the user asks to control, automate, inspect, scrape, or test something in their own Firefox browser, with their real profile, cookies, logins, and extensions. Covers launching the Agente profile with WebDriver BiDi and using the ten firefox MCP tools.
+description: Use when the user asks to control, automate, inspect, scrape, or test something in their own Firefox browser, with their real profile, cookies, logins, and extensions. Covers launching the Agente profile with WebDriver BiDi, the built-in firefox MCP tools, and the keyboard-only Google Docs plugin.
 ---
 Control the user's real Firefox through WebDriver BiDi. No headless browser and no copied profile: it is their actual browser.
 
@@ -56,7 +56,48 @@ Async work is awaited by `evaluate`:
 
 Site recipes live in `~/.pi/agent/integrations/firefox/plugins/`, one `.mjs` per plugin, loaded at MCP startup. Each plugin adds tools named `<plugin>_<tool>` and may set `match` (string or RegExp) so its tools refuse to run outside those URLs. `FIREFOX_PLUGINS_DIR` points elsewhere; `plugins/README.md` has the contract and the `api` object. Changes need an MCP restart.
 
-Two ship by default: `page` (generic page info) and `extensions` (profile listing through `extensions.json`, plus `webExtension.*` install and uninstall). Extension listing needs the profile directory, found by mtime of `extensions.json` under the usual bases; override with `FIREFOX_PROFILE_DIR`.
+A plugin can be a single `.mjs` or a folder with `index.mjs` as its entry point.
+
+Three ship by default: `page` (generic page info), `extensions` (profile listing through `extensions.json`, plus `webExtension.*` install and uninstall), and `google-docs`. Extension listing needs the profile directory, found by mtime of `extensions.json` under the usual bases; override with `FIREFOX_PROFILE_DIR`.
+
+## Google Docs (`docs_*`)
+
+The `google-docs` plugin drives the document already open in this browser. No OAuth, no API key, no paid API: it types with real key events, reaches menu commands through the tool finder (`Alt+/`), and reads the document back through its export endpoint. Keyboard only: no pointer events and no system clipboard.
+
+Setup, once per profile:
+
+1. Sign in: `docs_login` opens accounts.google.com. The Agente profile keeps the session.
+2. Turn off `Tools > Preferences > Detect lists automatically`. With it on, Docs rewrites typed text that starts with `1. ` or `- ` into a list, which breaks headings and code lines.
+
+| Tool | Use |
+|---|---|
+| `docs_status` | docId, title, editor loaded, signed-in state |
+| `docs_open`, `docs_new` | open by id/url, create a document |
+| `docs_read` | markdown (native `.md` export), text or html; the download goes to a temp dir and is deleted right after |
+| `docs_write` | markdown to typed content; `mode` = replace, append, prepend, cursor |
+| `docs_format`, `docs_style`, `docs_list` | selection formatting, paragraph style, bullet/number/checklist |
+| `docs_table` | insert from data or rows x cols; `action` edits rows and columns |
+| `docs_image` | `url` (Google fetches it) or `path` (local file, synthetic drop, no file picker) |
+| `docs_formula` | LaTeX rendered locally with pdflatex and ImageMagick, inserted as an image |
+| `docs_copy` | duplicate the document (File > Make a copy), optional new name, opens the copy in a new tab |
+| `docs_comment`, `docs_replace`, `docs_export`, `docs_rename` | comment, find and replace, download, title |
+| `docs_tabs`, `docs_key`, `docs_type`, `docs_eval` | escape hatches |
+
+Markdown dialect for `docs_write`: `#`..`######`, paragraphs, `**bold**`, `*italic*`, `~~strike~~`, `<u>underline</u>`, links, nested `-`/`1.`/`- [ ]` lists, pipe tables, `---`, `\pagebreak`, fenced code typed as plain lines, a single-line `$$latex$$` block that renders a formula image, and images as their own block:
+
+```markdown
+![Figure 1. Caption.](https://example.com/plot.png)
+![Figure 2. Caption.](/absolute/local/path.png)
+```
+
+Notes that save time:
+
+- Keep each `docs_write` under roughly 1500 characters. Long typing can outlive the MCP call timeout while the handler keeps going, so read the document before appending more.
+- An image insertion costs a few seconds and Docs throttles repeated exports; do not verify every image with `docs_read`, check the whole document once at the end.
+- `docs_rename` aborts unless the title field really has focus. That check is deliberate: Ctrl+A without focus selects the document and the next Backspace wipes it.
+- Firefox keeps Ctrl+F for its own find bar, so `docs_find` opens Docs' panel through the tool finder.
+- Formulas and images are inline objects, so they are not editable text and the markdown export returns them as base64 image references.
+- The plugin shares the single BiDi session of the firefox MCP: while a docs tool runs, the plain firefox tools wait, and vice versa.
 
 ## CAPTCHAs, Cloudflare and Turnstile
 

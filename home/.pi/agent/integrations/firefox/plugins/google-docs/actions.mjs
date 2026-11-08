@@ -99,6 +99,14 @@ export function makeDocs(api) {
 
   async function boot() {
     await api.attach();
+    // the landing page at /document/u/0/ is not an editor; if the session points
+    // at it, move to a real document tab
+    const url = await api.evaluate('location.href');
+    if (!/docs\.google\.com\/document\/d\//.test(url)) {
+      const { contexts = [] } = await api.call('browsingContext.getTree', { maxDepth: 1 });
+      const doc = contexts.find((c) => /docs\.google\.com\/document\/d\//.test(c.url || ''));
+      if (doc) api.use?.(doc.context);
+    }
     return true;
   }
 
@@ -906,6 +914,96 @@ async function insertLocalImage(path, caption) {
     throw new Error('the new document did not open');
   }
 
+  async function copyDoc({ title } = {}) {
+    const current = await requireDoc();
+    const before = new Set(
+      ((await api.call('browsingContext.getTree', { maxDepth: 1 })).contexts || []).map((c) => c.context),
+    );
+    await focusOnly();
+    await runCommand('hacer una copia', /^Hacer una copia$/i, { keepFocus: true });
+
+    // the dialog carries its own name field, prefilled with "Copy of <title>"
+    let field = null;
+    for (let i = 0; i < 25; i++) {
+      const state = await api.evaluate(`(() => {
+        const input = [...document.querySelectorAll('input[type="text"]')].find(
+          (el) => el.offsetParent !== null && /Copia de |Copy of /i.test(el.value),
+        );
+        if (!input) return null;
+        input.focus();
+        input.select();
+        return { focused: document.activeElement === input, value: input.value };
+      })()`);
+      if (state?.focused) {
+        field = state;
+        break;
+      }
+      await sleep(200);
+    }
+    if (!field) {
+      await api.evaluate(`(() => {
+        const btn = [...document.querySelectorAll('button,[role="button"]')].find(
+          (b) => b.offsetParent !== null && /^(Cancelar|Cancel)$/i.test((b.innerText || '').trim()),
+        );
+        if (btn) btn.click();
+        return !!btn;
+      })()`);
+      throw new Error('the copy dialog did not open');
+    }
+
+    if (title) {
+      await api.keys([{ key: 'a', mods: ['Ctrl'] }, 'pause', 'Backspace']);
+      await api.text(title);
+      await sleep(200);
+    }
+
+    const clicked = await api.evaluate(`(() => {
+      const btn = [...document.querySelectorAll('button,[role="button"]')].find(
+        (b) => b.offsetParent !== null && /^(Hacer una copia|Make a copy)$/i.test((b.innerText || '').trim()),
+      );
+      if (!btn) return false;
+      btn.click();
+      return true;
+    })()`);
+    if (!clicked) throw new Error('the copy dialog has no confirm button');
+
+    // Docs opens the copy in a new tab, so look for a document tab that was not
+    // there before and point the session at it.
+    let copyId = null;
+    let copyContext = null;
+    const deadline = Date.now() + 30000;
+    while (Date.now() < deadline) {
+      await sleep(700);
+      const here = await api.evaluate(EDITOR_INFO);
+      if (here.docId && here.docId !== current.docId && here.editor) {
+        copyId = here.docId;
+        break;
+      }
+      const contexts = (await api.call('browsingContext.getTree', { maxDepth: 1 })).contexts || [];
+      const fresh = contexts.find(
+        (c) => !before.has(c.context) && /docs\.google\.com\/document\/d\//.test(c.url || ''),
+      );
+      if (fresh) {
+        copyContext = fresh.context;
+        copyId = (String(fresh.url).match(/\/document\/d\/([a-zA-Z0-9_-]+)/) || [])[1] || null;
+        break;
+      }
+    }
+    if (!copyId) throw new Error('the copy did not open in a new tab');
+
+    if (copyContext) api.use?.(copyContext);
+    await sleep(1200);
+    const info = await api.evaluate(EDITOR_INFO);
+    return {
+      url: info.url || (await api.evaluate('location.href')),
+      docId: info.docId || copyId,
+      title: info.title,
+      source: current.docId,
+      name: title || field.value,
+      tab: copyContext ? 'new' : 'reused',
+    };
+  }
+
   async function rename(title) {
     await requireDoc();
     await runCommand('cambiar nombre', /^Cambiar nombre/i);
@@ -1043,6 +1141,7 @@ async function insertLocalImage(path, caption) {
     read,
     writeMarkdown,
     rename,
+    copyDoc,
     style,
     format,
     list,

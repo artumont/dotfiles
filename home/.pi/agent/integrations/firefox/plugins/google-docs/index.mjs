@@ -161,6 +161,17 @@ export default {
       handler: (args, api) => docsFor(api).comment(args),
     },
     {
+      name: 'copy',
+      description:
+        'Duplicates the current document through File > Make a copy, optionally renaming the copy, and leaves the copy open in the tab. Returns the new docId and url.',
+      inputSchema: schema({
+        title: { type: 'string', description: 'Name for the copy; defaults to "Copy of <title>".' },
+      }),
+      async handler(args, api) {
+        return JSON.stringify(await docsFor(api).copyDoc(args), null, 2);
+      },
+    },
+    {
       name: 'replace',
       description: 'Find and replace through the Docs panel (Ctrl+H).',
       inputSchema: schema({ find: { type: 'string' }, replace: { type: 'string' }, all: { type: 'boolean' } }, ['find']),
