@@ -1,6 +1,6 @@
 # Plugins
 
-Cada `*.mjs` de este directorio se carga al arrancar el servidor MCP y agrega herramientas con el prefijo `<plugin>_`. `FIREFOX_PLUGINS_DIR` apunta a otro directorio; un plugin que falla al cargar se ignora con un aviso en stderr y el resto sigue.
+Cada `*.mjs` de este directorio se carga al arrancar el servidor MCP y agrega herramientas con el prefijo `<plugin>_`. Un plugin también puede vivir en su propia carpeta con `index.mjs` como entrada (por ejemplo `google-docs/`). `FIREFOX_PLUGINS_DIR` apunta a otro directorio; un plugin que falla al cargar se ignora con un aviso en stderr y el resto sigue.
 
 ```js
 export default {

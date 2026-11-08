@@ -1,4 +1,4 @@
-import { readdir } from 'node:fs/promises';
+import { readdir, stat } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 import { log } from './config.mjs';
 import { api, currentUrl } from './actions.mjs';
@@ -41,7 +41,19 @@ export async function loadPlugins(dir = process.env.FIREFOX_PLUGINS_DIR || DEFAU
   const root = dir instanceof URL ? dir : pathToFileURL(String(dir).replace(/\/?$/, '/'));
   let files;
   try {
-    files = (await readdir(root)).filter((f) => f.endsWith('.mjs')).sort();
+    const names = (await readdir(root)).sort();
+    files = [];
+    for (const name of names) {
+      const url = new URL(name, root);
+      if (name.endsWith('.mjs')) {
+        files.push(url);
+      } else {
+        // a plugin may live in its own folder, with index.mjs as the entry
+        try {
+          if ((await stat(url)).isDirectory()) files.push(new URL(`${name}/index.mjs`, root));
+        } catch {}
+      }
+    }
   } catch (err) {
     log(`sin plugins en ${root.pathname}: ${err?.message ?? err}`);
     return [];
@@ -49,7 +61,7 @@ export async function loadPlugins(dir = process.env.FIREFOX_PLUGINS_DIR || DEFAU
   const tools = [];
   for (const file of files) {
     try {
-      const mod = await import(new URL(file, root));
+      const mod = await import(file);
       tools.push(...wrap(mod.default));
     } catch (err) {
       log(`plugin ${file} ignorado: ${err?.message ?? err}`);

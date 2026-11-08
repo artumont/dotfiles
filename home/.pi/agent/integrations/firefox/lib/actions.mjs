@@ -1,7 +1,7 @@
-import { call, sendNoReply, attach as openSession } from './transport.mjs';
+import { call, sendNoReply, attach as openSession, setContextId } from './transport.mjs';
 import { context, evaluate, waitHeight } from './page.mjs';
 import { findElement, snapshotJs } from './dom.mjs';
-import { clickAt, typeKeys, SPECIAL_KEYS } from './input.mjs';
+import { clickAt, typeKeys, sendKeys, sendText, SPECIAL_KEYS } from './input.mjs';
 
 export const currentUrl = () => evaluate('location.href');
 
@@ -85,7 +85,12 @@ export const api = {
   click,
   type: typeText,
   press: pressKey,
+  keys: sendKeys,
+  text: sendText,
   url: currentUrl,
   attach: openSession,
   call,
+  // Plugins that open their own tab point evaluate/click at it with use(id);
+  // use(null) hands the choice back to the visible tab.
+  use: (id) => setContextId(id),
 };
