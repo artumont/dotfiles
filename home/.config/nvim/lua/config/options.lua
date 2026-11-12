@@ -27,6 +27,15 @@ vim.opt.mousescroll = "ver:2,hor:2"
 
 vim.o.exrc = true
 
+-- Python Indentation
+vim.g.python_indent = {
+  closed_paren_align_last_line = false,
+  open_paren = "shiftwidth()",
+  continue = "shiftwidth()",
+  nested_paren = "shiftwidth()",
+  disable_parentheses_indenting = false,
+}
+
 -- Diagnostics
 diagnostic.config {
   virtual_text = true,
