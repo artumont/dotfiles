@@ -36,7 +36,6 @@ class LinksPage(Gtk.Box):
             ("Dry run", self.on_dry_run),
             ("Safe pull", self.on_pull),
             ("Agregar…", self.on_add_entry),
-            ("Ver manifest", self.on_show_manifest),
         ):
             button = Gtk.Button(label=label)
             button.connect("clicked", handler)
@@ -85,18 +84,6 @@ class LinksPage(Gtk.Box):
 
     def on_pull(self, _button=None):
         self.host.runner.run_async([sys.executable, "-m", "bootstrap.pull", "--yes"], self.refresh)
-
-    def on_show_manifest(self, _button=None):
-        dialog = Gtk.Dialog(title="manifest.json", transient_for=self.get_toplevel())
-        dialog.set_default_size(820, 560)
-        dialog.add_button("Cerrar", Gtk.ResponseType.CLOSE)
-        text = Gtk.TextView()
-        text.set_monospace(True)
-        text.get_buffer().set_text(self.host.manifest_path.read_text(encoding="utf-8"))
-        dialog.get_content_area().add(scroller(text))
-        dialog.show_all()
-        dialog.run()
-        dialog.destroy()
 
     def on_add_entry(self, _button=None):
         try:

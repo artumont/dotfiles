@@ -20,7 +20,8 @@ class SecretsPage(Gtk.Box):
         self.host = host
         self.set_border_width(10)
 
-        self.store = Gtk.ListStore(str, str, str, str, str)
+        self.store = Gtk.ListStore(str, str, str, str, str, int)
+        self.rows: list[keyring.Item | None] = []
         self.view = Gtk.TreeView(model=self.store)
         text_columns(self.view, COLUMNS)
         self.pack_start(scroller(self.view), True, True, 0)
@@ -30,7 +31,6 @@ class SecretsPage(Gtk.Box):
             ("Agregar / actualizar…", self.on_set),
             ("Sembrar faltantes", self.on_seed),
             ("Borrar marcado", self.on_delete),
-            ("Ver todos", self.on_list),
         ):
             button = Gtk.Button(label=label)
             button.connect("clicked", handler)
@@ -50,6 +50,7 @@ class SecretsPage(Gtk.Box):
 
     def refresh(self):
         self.store.clear()
+        self.rows.clear()
         expected = self.expected()
         if expected is None:
             return
@@ -60,29 +61,32 @@ class SecretsPage(Gtk.Box):
             saved = []
 
         declared = [(service, account) for service, account, _, _ in expected]
-        present = {(service, account) for service, account, _ in saved}
+        by_name = {(item.service, item.account): item for item in saved}
 
         for service, account, label, source in expected:
-            state = "conocido" if (service, account) in present else "falta"
-            self.store.append([service, account, label, state, source])
+            item = by_name.get((service, account))
+            self.add_row(service, account, label, "conocido" if item else "falta", source, item)
 
-        known = set(declared)
-        unknown = [row for row in saved if (row[0], row[1]) not in known]
-        for service, account, label in unknown:
-            self.store.append([service, account, label, "no conocido", "-"])
+        unknown = [item for item in saved if (item.service, item.account) not in set(declared)]
+        for item in unknown:
+            self.add_row(*item.display(), item.label, "no conocido", "-", item)
 
-        missing = sum(1 for pair in declared if pair not in present)
+        missing = sum(1 for pair in declared if pair not in by_name)
         self.status.set_text(
-            f"{len(saved)} en el keyring, {len(present & known)} conocidos, "
+            f"{len(saved)} en el keyring, {len(saved) - len(unknown)} conocidos, "
             f"{len(unknown)} no conocidos, {missing} declarados sin guardar"
         )
 
-    def selected(self) -> tuple[str, str] | None:
+    def add_row(self, service: str, account: str, label: str, state: str, source: str, item):
+        self.rows.append(item)
+        self.store.append([service or "-", account or "-", label, state, source, len(self.rows) - 1])
+
+    def selection(self) -> int | None:
         model, path = self.view.get_selection().get_selected()
         if path is None:
             self.status.set_text("marca una fila primero")
             return None
-        return model[path][0], model[path][1]
+        return model[path][5]
 
     def on_set(self, _button=None):
         dialog = Gtk.Dialog(title="Guardar secreto", transient_for=self.get_toplevel())
@@ -90,8 +94,8 @@ class SecretsPage(Gtk.Box):
         grid = Gtk.Grid(column_spacing=10, row_spacing=8, margin=12)
         dialog.get_content_area().add(grid)
 
-        service = Gtk.Entry(text="bws-token")
-        account = Gtk.Entry(text="access-token")
+        service = Gtk.Entry()
+        account = Gtk.Entry()
         value = Gtk.Entry()
         value.set_visibility(False)
         value.set_input_purpose(Gtk.InputPurpose.PASSWORD)
@@ -156,28 +160,27 @@ class SecretsPage(Gtk.Box):
         return f"guardado {service}/{account}"
 
     def on_delete(self, _button=None):
-        selected = self.selected()
-        if selected is None:
+        index = self.selection()
+        if index is None:
             return
-        service, account = selected
+        item = self.rows[index]
+        name = f"{self.store[index][0]}/{self.store[index][1]}"
+        if item is None:
+            self.status.set_text(f"{name} no está en el keyring: no hay nada que borrar")
+            return
         dialog = Gtk.MessageDialog(
             transient_for=self.get_toplevel(),
             message_type=Gtk.MessageType.QUESTION,
             buttons=Gtk.ButtonsType.OK_CANCEL,
-            text=f"¿Borrar {service}/{account} del keyring?",
+            text=f"¿Borrar {name} del keyring?",
         )
         answer = dialog.run()
         dialog.destroy()
         if answer != Gtk.ResponseType.OK:
             return
-        self.host.runner.run_task(
-            lambda: f"{keyring.delete(service, account)} borrado(s)",
-            f"rm {service}/{account}",
-            self.refresh,
-        )
+        self.host.runner.run_task(lambda: self.delete_item(item), f"rm {name}", self.refresh)
 
-    def on_list(self, _button=None):
-        self.host.runner.run_task(
-            lambda: "\n".join(f"{s:<22}{a:<20}{label}" for s, a, label in keyring.items()),
-            "list keyring",
-        )
+    @staticmethod
+    def delete_item(item) -> str:
+        item.delete()
+        return "borrado"

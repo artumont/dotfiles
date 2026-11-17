@@ -27,18 +27,23 @@ def set(service: str, account: str, value: str, label: str = "") -> None:
     )
 
 
-def delete(service: str, account: str) -> int:
-    secretstorage, bus, _ = session()
-    items = list(secretstorage.search_items(bus, {"service": service, "account": account}))
-    for item in items:
-        item.delete()
-    return len(items)
+class Item:
+    """Item del keyring; conserva el handle para poder borrarlo tal cual."""
+
+    def __init__(self, handle):
+        self.handle = handle
+        attrs = handle.get_attributes()
+        self.service = attrs.get("service", "")
+        self.account = attrs.get("account", "")
+        self.label = handle.get_label()
+
+    def delete(self) -> None:
+        self.handle.delete()
+
+    def display(self) -> tuple[str, str]:
+        return self.service or "-", self.account or "-"
 
 
-def items() -> list[tuple[str, str, str]]:
+def items() -> list[Item]:
     _, _, collection = session()
-    rows = []
-    for item in collection.get_all_items():
-        attrs = item.get_attributes()
-        rows.append((attrs.get("service", "-"), attrs.get("account", "-"), item.get_label()))
-    return sorted(rows)
+    return sorted((Item(handle) for handle in collection.get_all_items()), key=lambda i: (i.service, i.account))
