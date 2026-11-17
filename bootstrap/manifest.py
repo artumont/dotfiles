@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+import os
 from pathlib import Path
 
 from bootstrap.install import load_manifest
@@ -10,6 +12,49 @@ ROOT = Path(__file__).resolve().parents[1]
 SOURCE_ROOTS = ("home", "desktop", "system", "hardware")
 EXCLUDED_DIRS = {"__pycache__"}
 EXCLUDED_SUFFIXES = {".vil", ".pyc"}
+
+
+def read(manifest_path: Path) -> dict:
+    """Manifest completo; ValueError si no se puede leer o no es un objeto."""
+    try:
+        data = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as error:
+        raise ValueError(f"no pude leer el manifest: {error}") from error
+    if not isinstance(data, dict):
+        raise ValueError("el manifest no es un objeto JSON")  # noqa: TRY004
+    return data
+
+
+def save_links(manifest_path: Path, links: list[dict]) -> None:
+    """Reemplaza solo `links`, sin perder las demás secciones."""
+    data = read(manifest_path)
+    data["links"] = links
+    tmp = manifest_path.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    tmp.replace(manifest_path)
+
+
+def expected_secrets(manifest_path: Path) -> list[tuple[str, str, str, str]]:
+    """Secretos declarados: (servicio, cuenta, etiqueta, de dónde sale)."""
+    return [
+        (entry.get("service", ""), entry.get("account", ""), entry.get("label", ""), entry.get("source", ""))
+        for entry in read(manifest_path).get("secrets", [])
+    ]
+
+
+def link_state(entry: dict, root: Path = ROOT) -> str:
+    dest = Path(os.path.expanduser(entry["dest"]))
+    source = root / entry["source"]
+    if dest.is_symlink():
+        try:
+            if dest.resolve() == source.resolve():
+                return "enlazado"
+            return f"enlace a {dest.resolve()}"
+        except OSError:
+            return "enlace roto"
+    if dest.exists():
+        return "archivo real (se respalda)"
+    return "sin instalar"
 
 
 def manifest_sources(manifest_path: Path) -> set[str]:
