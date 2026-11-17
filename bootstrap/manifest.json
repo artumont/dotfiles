@@ -85,5 +85,13 @@
       "source": "desktop/color-schemes",
       "dest": "~/.local/share/color-schemes"
     }
+  ],
+  "secrets": [
+    {
+      "service": "bws:access-token",
+      "account": "",
+      "label": "BWS access token",
+      "source": "Bitwarden web > Secrets Manager > machine account > access token"
+    }
   ]
 }

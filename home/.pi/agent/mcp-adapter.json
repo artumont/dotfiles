@@ -33,7 +33,7 @@
         "drive"
       ],
       "env": {
-        "BWS_ACCESS_TOKEN": "!python3 -c 'import secretstorage as s;b=s.dbus_init();print(next((i.get_secret().decode() for i in s.search_items(b,{\"service\":\"bws-mcp\",\"account\":\"access-token\"})),\"\"),end=\"\")'",
+        "BWS_ACCESS_TOKEN": "!secret-tool lookup service bws:access-token",
         "WORKSPACE_MCP_CREDENTIALS_DIR": "/home/artu/.config/google-workspace-mcp/credentials",
         "OAUTHLIB_INSECURE_TRANSPORT": "1"
       },

@@ -33,6 +33,11 @@ distro (`python3-gi`). Lo único que hace falta instalar aparte es secretstorage
 
     python3 -m pip install --user --break-system-packages secretstorage
 
-El keyring no viaja en el repo: solo los nombres que aparecen en `KNOWN` dentro
-de `manager.py`. En una máquina nueva abre la pestaña Secretos y usa "Sembrar
-faltantes"; cada valor se pega en un campo oculto.
+El keyring no viaja en el repo: solo los nombres que aparecen en la lista
+`secrets` de `bootstrap/manifest.json`. En una máquina nueva abre la pestaña
+Secretos y usa "Sembrar faltantes"; cada valor se pega en un campo oculto.
+
+Los valores se leen desde el shell con `secret-tool` (paquete
+`libsecret-tools`), por ejemplo:
+
+    secret-tool lookup service bws:access-token
