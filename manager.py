@@ -1,722 +1,633 @@
 #!/usr/bin/env python3
-"""Interactive dotfiles manager: add new files/folders to the manifest, install them, and manage icons."""
-
-from __future__ import annotations
-
-import contextlib
+"""Dotfiles manager: vínculos del manifest, iconos y secretos del keyring en una GUI."""
 import json
 import os
 import subprocess
 import sys
+import threading
 from pathlib import Path
 
-from bootstrap import icons as icon
-from bootstrap import pull
-from bootstrap.install import (
-    DEFAULT_BACKUP_DIR,
-    destination_path,
-    install_link,
-    load_manifest,
-    source_path,
-)
-from bootstrap.manifest import (
-    ROOT,
-    human_size,
-    list_candidates,
-    suggest_dest,
-)
+import gi
 
-MANIFEST_PATH = ROOT / "bootstrap" / "manifest.json"
+gi.require_version("Gtk", "3.0")
+gi.require_version("Pango", "1.0")
+from gi.repository import GLib, Gtk, Pango  # noqa: E402
 
-# --- screen ----------------------------------------------------------------
+from bootstrap import icons as icon  # noqa: E402
+from bootstrap.manifest import list_candidates  # noqa: E402
 
-_CLEAR = ["cls"] if os.name == "nt" else ["clear"]
+ROOT = Path(__file__).resolve().parent
+MANIFEST = ROOT / "bootstrap" / "manifest.json"
 
+# (servicio, cuenta, etiqueta, de dónde sale el valor)
+KNOWN = [
+    (
+        "bws-mcp",
+        "access-token",
+        "BWS access token (pi agent)",
+        "Bitwarden web > Secrets Manager > machine account > access token",
+    ),
+]
 
-def clear() -> None:
-    subprocess.run(_CLEAR, check=False)
 
+# --- helpers ---------------------------------------------------------------
 
-def pause(msg: str = "Press enter to continue...") -> None:
-    input(dim(f"\n  {msg}"))
 
+def expand(path: str) -> Path:
+    return Path(os.path.expanduser(path))
 
-# --- color -----------------------------------------------------------------
 
-_USE_COLOR = sys.stdout.isatty() and os.environ.get("NO_COLOR") is None
-
-
-def _c(code: str, text: object) -> str:
-    return f"\033[{code}m{text}\033[0m" if _USE_COLOR else str(text)
-
-
-def bold(text: object) -> str:
-    return _c("1", text)
-
-
-def dim(text: object) -> str:
-    return _c("2", text)
-
-
-def red(text: object) -> str:
-    return _c("31", text)
-
-
-def green(text: object) -> str:
-    return _c("32", text)
-
-
-def yellow(text: object) -> str:
-    return _c("33", text)
-
-
-def blue(text: object) -> str:
-    return _c("34", text)
-
-
-def magenta(text: object) -> str:
-    return _c("35", text)
-
-
-def cyan(text: object) -> str:
-    return _c("36", text)
-
-
-def white(text: object) -> str:
-    return _c("37", text)
-
-
-# --- box drawing -----------------------------------------------------------
-
-SEP = dim("─" * 52)
-
-
-def header(title: str) -> None:
-    clear()
-    print()
-    print(f"  {magenta('◆')} {bold(title)}")
-    print(f"  {SEP}")
-
-
-def footer() -> None:
-    print(f"  {SEP}")
-
-
-# --- prompts ---------------------------------------------------------------
-
-
-def ask(prompt: str, default: str = "") -> str:
-    if default:
-        raw = input(f"  {cyan('▸')} {prompt} {dim(f'[{default}]')}: ").strip()
-        return raw or default
-    return input(f"  {cyan('▸')} {prompt}: ").strip()
-
-
-def confirm(prompt: str, default_yes: bool = True) -> bool:
-    suffix = green("Y/n") if default_yes else yellow("y/N")
-    answer = input(f"  {cyan('▸')} {prompt} ({suffix}): ").strip().lower()
-    if not answer:
-        return default_yes
-    return answer in ("y", "yes")
-
-
-# --- error screen ----------------------------------------------------------
-
-
-def error_screen(error: Exception) -> None:
-    header("Error")
-    print(f"\n  {red(str(error))}\n")
-    footer()
-    pause()
-
-
-# --- add entry -------------------------------------------------------------
-
-
-def add_entry(manifest_path: Path) -> bool:
-    candidates = list_candidates(manifest_path)
-
-    header("Add dotfile")
-    print(dim("  Pick a source from the repo, or type a custom path.\n"))
-    print_candidates(candidates)
-
-    source = choose_source(candidates)
-    if source is None:
-        return False
-
-    clear()
-    header("Add dotfile")
-    kind = dim("folder") if (ROOT / source).is_dir() else dim("file")
-    print(f"  Source:  {blue(source)} ({kind})\n")
-
-    dest = choose_dest(source)
-    if dest is None:
-        return False
-
-    name = ask("Name", Path(source).name.replace("-", " ").replace("_", " ").title())
-
-    entries = load_manifest(manifest_path)
-    if any(entry["source"] == source for entry in entries) and not confirm(
-        yellow(f"warning: '{source}' already in manifest. Add duplicate?"),
-        default_yes=False,
-    ):
-        return False
-
-    entries.append({"name": name, "source": source, "dest": dest})
-
-    with manifest_path.open("w", encoding="utf-8") as file:
-        json.dump({"links": entries}, file, indent=2)
-        file.write("\n")
-
-    clear()
-    header("Dotfile added")
-    print()
-    print(f"  {green('✓')} {bold(name)}")
-    print(f"    {dim('from')} {blue(source)}")
-    print(f"    {dim('to  ')} {cyan(dest)}")
-    print(f"    {dim(str(manifest_path))}")
-    footer()
-    pause()
-    return True
-
-
-# --- manifest TUI ----------------------------------------------------------
-
-
-def print_candidates(candidates: list[Path]) -> None:
-    if not candidates:
-        print(yellow("\n  (nothing left to add)\n"))
-        return
-
-    max_len = max(len(str(p)) for p in candidates)
-    for index, path in enumerate(candidates, start=1):
-        full = ROOT / path
-        idx = dim(f"{index:>3}")
-        if full.is_dir():
-            label = blue(f"{path}/".ljust(max_len + 1))
-            tag = dim("📁")
-        else:
-            size = full.stat().st_size if full.exists() else 0
-            label = white(str(path).ljust(max_len))
-            tag = dim(f"📄 {human_size(size)}")
-        print(f"  {idx}  {label}  {tag}")
-    print()
-
-
-def choose_source(candidates: list[Path]) -> str | None:
-    while True:
-        raw = ask("Source (number or path, 'q' to cancel)")
-        if not raw or raw.lower() in ("q", "quit"):
-            return None
-
+def link_state(entry: dict) -> str:
+    dest = expand(entry["dest"])
+    source = ROOT / entry["source"]
+    if dest.is_symlink():
         try:
-            index = int(raw) - 1
-        except ValueError:
-            index = -1
-        if 0 <= index < len(candidates):
-            return str(candidates[index])
-
-        path = Path(raw)
-        if (ROOT / path).is_file() or (ROOT / path).is_dir():
-            return str(path)
-        print(red(f"  ✗ not found: {ROOT / path}"))
+            if dest.resolve() == source.resolve():
+                return "enlazado"
+            return f"enlace a {dest.resolve()}"
+        except OSError:
+            return "enlace roto"
+    if dest.exists():
+        return "archivo real (se respalda)"
+    return "sin instalar"
 
 
-def choose_dest(source: str) -> str | None:
-    suggested = suggest_dest(source)
-    kind = "folder" if (ROOT / source).is_dir() else "file"
-    dest = ask(f"Destination in $HOME ({kind})", suggested)
+def keyring():
+    import secretstorage
 
-    expanded = destination_path(dest)
-    if expanded.exists() or expanded.is_symlink():
-        resolved = None
-        with contextlib.suppress(OSError):
-            resolved = source_path(source)
-        if (
-            resolved is not None
-            and expanded.is_symlink()
-            and expanded.resolve() == resolved
+    bus = secretstorage.dbus_init()
+    collection = secretstorage.get_default_collection(bus)
+    if collection.is_locked():
+        raise RuntimeError("el keyring está bloqueado: desbloquéalo en el escritorio")
+    return secretstorage, bus, collection
+
+
+def keyring_get(service: str, account: str) -> bytes | None:
+    secretstorage, bus, _ = keyring()
+    items = list(secretstorage.search_items(bus, {"service": service, "account": account}))
+    return items[0].get_secret() if items else None
+
+
+def keyring_set(service: str, account: str, value: str, label: str = "") -> None:
+    _, _, collection = keyring()
+    collection.create_item(
+        label or f"{service}/{account}",
+        {"service": service, "account": account},
+        value.encode(),
+        replace=True,
+    )
+
+
+def keyring_delete(service: str, account: str) -> int:
+    secretstorage, bus, _ = keyring()
+    items = list(secretstorage.search_items(bus, {"service": service, "account": account}))
+    for item in items:
+        item.delete()
+    return len(items)
+
+
+def keyring_items() -> list[tuple[str, str, str]]:
+    _, _, collection = keyring()
+    rows = []
+    for item in collection.get_all_items():
+        attrs = item.get_attributes()
+        rows.append((attrs.get("service", "-"), attrs.get("account", "-"), item.get_label()))
+    return sorted(rows)
+
+
+# --- ventana ---------------------------------------------------------------
+
+
+class Tools(Gtk.Window):
+    def __init__(self):
+        super().__init__(title="Dotfiles manager")
+        self.set_default_size(1060, 680)
+        self.set_size_request(720, 480)
+
+        header = Gtk.HeaderBar()
+        header.set_show_close_button(True)
+        header.props.title = "Dotfiles"
+        header.props.subtitle = str(ROOT)
+        self.set_titlebar(header)
+
+        notebook = Gtk.Notebook()
+        notebook.append_page(self.links_page(), Gtk.Label(label="Vínculos"))
+        notebook.append_page(self.icons_page(), Gtk.Label(label="Iconos"))
+        notebook.append_page(self.secrets_page(), Gtk.Label(label="Secretos"))
+        notebook.append_page(self.log_page(), Gtk.Label(label="Log"))
+        self.add(notebook)
+
+        self.refresh_links()
+        self.refresh_icons()
+        self.refresh_secrets()
+
+    # --- infraestructura ---------------------------------------------------
+
+    def log(self, text: str, code: int | None = None):
+        end = self.buffer.get_end_iter()
+        self.buffer.insert(end, text.rstrip() + "\n\n")
+        if code is not None:
+            self.mark.set_text("ok" if code == 0 else f"exit {code}")
+        self.view.scroll_to_iter(self.buffer.get_end_iter(), 0.0, False, 0.0, 0.0)
+
+    def run_async(self, cmd, on_done=None):
+        def worker():
+            try:
+                proc = subprocess.run(
+                    [str(part) for part in cmd], cwd=str(ROOT), capture_output=True, text=True, timeout=900
+                )
+                out = (proc.stdout or "") + (proc.stderr or "")
+                code = proc.returncode
+            except Exception as error:  # noqa: BLE001
+                out, code = f"error: {error}", 1
+            GLib.idle_add(self._finished, f"$ {' '.join(str(c) for c in cmd)}\n{out}", code, on_done)
+
+        threading.Thread(target=worker, daemon=True).start()
+
+    def run_task(self, fn, label, on_done=None):
+        def worker():
+            try:
+                out, code = fn(), 0
+            except Exception as error:  # noqa: BLE001
+                out, code = f"error: {error}", 1
+            GLib.idle_add(self._finished, f"$ {label}\n{out or ''}", code, on_done)
+
+        threading.Thread(target=worker, daemon=True).start()
+
+    def _finished(self, text, code, on_done):
+        self.log(text, code)
+        if on_done:
+            on_done()
+        return False
+
+    def manifest_entries(self):
+        """Devuelve (entradas, error)."""
+        try:
+            return json.loads(MANIFEST.read_text(encoding="utf-8")).get("links", []), None
+        except (OSError, ValueError) as error:
+            return [], f"no pude leer el manifest: {error}"
+
+    def save_manifest(self, entries):
+        tmp = MANIFEST.with_suffix(".json.tmp")
+        tmp.write_text(json.dumps({"links": entries}, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        tmp.replace(MANIFEST)
+
+    # --- vínculos ----------------------------------------------------------
+
+    def links_page(self):
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        box.set_border_width(10)
+
+        self.link_store = Gtk.ListStore(bool, str, str, str, str)
+        view = Gtk.TreeView(model=self.link_store)
+        toggle = Gtk.CellRendererToggle()
+        toggle.connect("toggled", self.on_toggle)
+        view.append_column(Gtk.TreeViewColumn("", toggle, active=0))
+        for index, title, width, expand in (
+            (1, "Nombre", 200, False),
+            (2, "Origen", 320, True),
+            (3, "Destino", 320, True),
+            (4, "Estado", 220, False),
         ):
-            print(yellow("  ↳ already linked, nothing to do"))
-            return None
-        if not confirm(f"{expanded} exists. Replace it on install?", default_yes=False):
-            return None
-    return dest
+            renderer = Gtk.CellRendererText()
+            renderer.set_property("ellipsize", Pango.EllipsizeMode.MIDDLE)
+            column = Gtk.TreeViewColumn(title, renderer, text=index)
+            column.set_resizable(True)
+            column.set_min_width(width)
+            column.set_expand(expand)
+            view.append_column(column)
 
+        scroller = Gtk.ScrolledWindow()
+        scroller.add(view)
+        box.pack_start(scroller, True, True, 0)
 
-def install_interactively(manifest_path: Path) -> None:
-    entries = load_manifest(manifest_path)
-    if not entries:
-        clear()
-        header("Install")
-        print(yellow("\n  Manifest empty — nothing to install.\n"))
-        footer()
-        pause()
-        return
+        buttons = Gtk.Box(spacing=6)
+        for label, handler in (
+            ("Recargar", lambda *_: self.refresh_links()),
+            ("Instalar marcados", self.on_install),
+            ("Dry run", self.on_dry_run),
+            ("Safe pull", self.on_pull),
+            ("Agregar…", self.on_add_entry),
+            ("Ver manifest", self.on_show_manifest),
+        ):
+            button = Gtk.Button(label=label)
+            button.connect("clicked", handler)
+            buttons.pack_start(button, False, False, 0)
+        box.pack_start(buttons, False, False, 0)
 
-    backup_dir = DEFAULT_BACKUP_DIR.expanduser().resolve()
-    installed = skipped = failed = 0
+        self.link_status = Gtk.Label(xalign=0)
+        box.pack_start(self.link_status, False, False, 0)
+        return box
 
-    clear()
-    header(f"Install ({len(entries)} entries)")
-    print(dim("  y = install    n/s = skip    a = all remaining    q = quit\n"))
-
-    install_all_remaining = False
-    for entry in entries:
-        label = entry["name"]
-        try:
-            src = source_path(entry["source"])
-            dst = destination_path(entry["dest"])
-            already = dst.is_symlink() and dst.resolve() == src
-        except (OSError, ValueError) as error:
-            print(red(f"  ✗ {label}: {error}"))
-            failed += 1
-            continue
-
-        if already:
-            print(f"  {dim('•')} {bold(label)}  {yellow('already linked')}")
-            skipped += 1
-            continue
-
-        print(f"\n  {dim('•')} {bold(label)}")
-        print(f"    {blue(str(src))} → {cyan(str(dst))}")
-
-        if not install_all_remaining:
-            answer = input(f"    install? {dim('(y/n/a/q)')} ").strip().lower()
-            if answer == "q":
-                break
-            if answer == "a":
-                install_all_remaining = True
-            elif answer in ("n", "s", "no", "skip"):
-                print(f"    {dim('skipped')}")
-                skipped += 1
-                continue
-
-        try:
-            install_link(entry, dry_run=False, make_backup=True, backup_dir=backup_dir)
-            print(f"    {green('✓ installed')}")
-            installed += 1
-        except (OSError, ValueError) as error:
-            print(f"    {red(f'✗ failed: {error}')}")
-            failed += 1
-
-    footer()
-    print()
-    parts = [green(f"{installed} installed"), f"{skipped} skipped"]
-    if failed:
-        parts.append(red(f"{failed} failed"))
-    else:
-        parts.append("0 failed")
-    print(f"  Done: {', '.join(parts)}")
-    if installed:
-        print(f"  {dim(f'Backups: {backup_dir}')}")
-    print()
-    pause()
-
-
-def show_manifest(manifest_path: Path) -> None:
-    entries = load_manifest(manifest_path)
-
-    header(f"Manifest ({len(entries)} entries)\n")
-
-    max_name = max(len(e["name"]) for e in entries) if entries else 0
-    max_src = max(len(e["source"]) for e in entries) if entries else 0
-
-    for entry in entries:
-        exists = (ROOT / entry["source"]).exists()
-        tag = green(" ✓") if exists else red(" ✗")
-        name = bold(entry["name"].ljust(max_name))
-        src = blue(entry["source"].ljust(max_src))
-        dst = cyan(entry["dest"])
-        print(f"  {tag}  {name}  {dim('→')}  {src}  {dim('→')}  {dst}")
-
-    footer()
-    pause()
-
-
-# --- icon TUI --------------------------------------------------------------
-
-
-def _pick_category() -> str | None:
-    """Show category list, return selected category or None on cancel."""
-    for i, (cat, desc) in enumerate(icon.ICON_CATEGORIES, 1):
-        print(f"      {dim(f'{i:>2}.')} {bold(cat)}  {dim(desc)}")
-    print()
-    raw_cat = ask("Category", "1")
-    if not raw_cat or raw_cat.lower() in ("q", "quit"):
-        return None
-    try:
-        cat_idx = int(raw_cat) - 1
-        return icon.ICON_CATEGORIES[cat_idx][0]
-    except (ValueError, IndexError):
-        return raw_cat.strip() or None
-
-
-def icon_install() -> None:
-    header("Install icon")
-    print(dim(f"  Raster: scaled to {icon.MIN_ICON_SIZE}px+ square icons, all sizes."))
-    print(dim("  SVG:    installed once into scalable/ and scaled on demand."))
-    print(dim(f"  Source: {icon.REPO_ICONS_DIR}/"))
-    print()
-
-    # scan repo icons
-    repo_icons = icon.scan_repo_icons()
-
-    if not repo_icons:
-        print(yellow("  No icons found in desktop/icons/."))
-        print()
-        print(dim("  Add PNG/SVG files to desktop/icons/{category}/ and try again."))
-        footer()
-        pause()
-        return
-
-    # grouped list
-    by_cat = icon.repo_icons_by_category()
-    idx = 0
-    max_name = max(len(ri.name) for ri in repo_icons)
-    for cat in sorted(by_cat):
-        items = by_cat[cat]
-        print(f"    {bold(cat)}")
-        for ri in items:
-            idx += 1
-            dims = icon.get_image_dimensions(ri.path)
-            dim_str = f"{dims[0]}x{dims[1]}" if dims else dim("?")
-            print(f"      {dim(f'{idx:>3}')}  {green(ri.name.ljust(max_name))}  {dim(dim_str)}  {dim(ri.path.suffix)}")
-    print()
-    print(f"    {dim(f'{idx + 1}')}  {dim('(type a custom path)')}")
-    print()
-
-    # pick
-    raw = ask(f"Pick icon (1-{idx + 1}) or path, 'q' to cancel")
-    if not raw or raw.lower() in ("q", "quit"):
-        return
-
-    try:
-        pick = int(raw)
-    except ValueError:
-        pick = -1
-
-    if 1 <= pick <= idx:
-        selected = repo_icons[pick - 1]
-        src = selected.path
-        category = selected.category
-        suggested_name = selected.name
-        if category == "uncategorized":
-            print()
-            picked = _pick_category()
-            if picked is None:
-                return
-            category = picked
-    else:
-        # custom path — resolve relative to repo root
-        src = Path(raw).expanduser()
-        if not src.is_absolute():
-            src = ROOT / src
-        src = src.resolve()
-        if not src.exists():
-            print(red(f"  ✗ not found: {src}"))
-            pause()
+    def refresh_links(self):
+        entries, error = self.manifest_entries()
+        if error:
+            self.link_store.clear()
+            self.link_status.set_text(error)
             return
-        print()
-        picked = _pick_category()
-        if picked is None:
-            return
-        category = picked
-        suggested_name = src.stem.lower().replace(" ", "_").replace("-", "_")
+        self.link_store.clear()
+        for entry in entries:
+            self.link_store.append([False, entry["name"], entry["source"], entry["dest"], link_state(entry)])
+        linked = sum(1 for entry in entries if link_state(entry) == "enlazado")
+        self.link_status.set_text(f"{len(entries)} entradas, {linked} enlazadas")
 
-    # name
-    name = ask("Icon name", suggested_name)
-    if not name:
-        print(red("  ✗ empty name"))
-        pause()
-        return
-    name = name.lower().replace(" ", "_").replace("-", "_")
+    def on_toggle(self, _renderer, path):
+        self.link_store[path][0] = not self.link_store[path][0]
 
-    # validate
-    clear()
-    header("Validate icon")
-    print()
-    print(f"  {dim('source:')}     {blue(str(src))}")
-    print(f"  {dim('name:')}       {bold(name)}")
-    print(f"  {dim('category:')}   {bold(category)}")
-    print()
+    def marked_links(self):
+        return [row[1] for row in self.link_store if row[0]]
 
-    ok, error = icon.validate_source(src)
-    if not ok:
-        print(f"  {red('✗ validation failed')}")
-        print(f"    {red(error)}")
-        footer()
-        pause()
-        return
+    def on_install(self, _button=None):
+        cmd = [sys.executable, "-m", "bootstrap.install"]
+        for name in self.marked_links():
+            cmd += ["--only", name]
+        self.run_async(cmd, self.refresh_links)
 
-    print(f"  {green('✓ validation passed')}")
-    print()
+    def on_dry_run(self, _button=None):
+        cmd = [sys.executable, "-m", "bootstrap.install", "--dry-run"]
+        for name in self.marked_links():
+            cmd += ["--only", name]
+        self.run_async(cmd)
 
-    # preview
-    is_svg = src.suffix.lower() == ".svg"
-    sizes = icon.ICON_SIZES + icon.ICON_SIZES_2X
-    if is_svg:
-        print(dim("  Will install 1 file — vector scales to every size:"))
-        print()
-        target = icon.category_dir(icon.SCALABLE_SIZE, category) / f"{name}.svg"
-        status = yellow("(exists)") if target.exists() else ""
-        label = icon.size_label(icon.SCALABLE_SIZE)
-        print(f"    {dim('→')} {label:>16}  {dim(str(target))} {status}")
-    else:
-        print(dim(f"  Will generate {len(sizes)} files:"))
-        print()
-        for size in sizes:
-            label = icon.size_label(size)
-            target = icon.category_dir(size, category) / f"{name}.png"
-            exists = target.exists()
-            status = yellow("(exists)") if exists else ""
-            print(f"    {dim('→')} {label:>16}  {dim(str(target))} {status}")
-    print()
+    def on_pull(self, _button=None):
+        self.run_async([sys.executable, "-m", "bootstrap.pull", "--yes"], self.refresh_links)
 
-    if not confirm(f"Install {name}?"):
-        return
+    def on_show_manifest(self, _button=None):
+        dialog = Gtk.Dialog(title="manifest.json", transient_for=self)
+        dialog.set_default_size(820, 560)
+        dialog.add_button("Cerrar", Gtk.ResponseType.CLOSE)
+        text = Gtk.TextView()
+        text.set_monospace(True)
+        text.get_buffer().set_text(MANIFEST.read_text(encoding="utf-8"))
+        scroller = Gtk.ScrolledWindow()
+        scroller.add(text)
+        dialog.get_content_area().add(scroller)
+        dialog.show_all()
+        dialog.run()
+        dialog.destroy()
 
-    # install
-    clear()
-    header(f"Installing {bold(name)}")
-    print()
-
-    installed = 0
-    if is_svg:
-        # Vector: one file, no scaling passes.
-        target = icon.category_dir(icon.SCALABLE_SIZE, category) / f"{name}.svg"
+    def on_add_entry(self, _button=None):
         try:
-            icon.copy_svg(src, target)
-            label = icon.size_label(icon.SCALABLE_SIZE)
-            print(f"  {green('✓')} {label:>16}  {dim(str(target))}")
-            installed = 1
-        except Exception as error:
-            print(f"  {red('✗')} scalable  {red(str(error))}")
-    else:
-        for size in sizes:
-            target = icon.category_dir(size, category) / f"{name}.png"
-            try:
-                icon.scale_icon(src, size, target)
-                print(f"  {green('✓')} {icon.size_label(size):>16}  {dim(str(target))}")
-                installed += 1
-            except Exception as error:
-                print(f"  {red('✗')} {size}x{size}  {red(str(error))}")
+            candidates = [str(path) for path in list_candidates(MANIFEST)]
+        except Exception:  # noqa: BLE001
+            candidates = []
 
-    footer()
-    print()
-    print(f"  {green(f'✓ {installed}/{1 if is_svg else len(sizes)} installed')}")
-    print(f"  {dim(f'Base: {icon.HICOLOR_BASE}')}")
-    pause()
+        dialog = Gtk.Dialog(title="Agregar al manifest", transient_for=self)
+        dialog.add_buttons("Cancelar", Gtk.ResponseType.CANCEL, "Agregar", Gtk.ResponseType.OK)
+        grid = Gtk.Grid(column_spacing=10, row_spacing=8, margin=12)
+        dialog.get_content_area().add(grid)
 
+        name_entry = Gtk.Entry()
+        source_combo = Gtk.ComboBoxText.new_with_entry()
+        for candidate in candidates:
+            source_combo.append_text(candidate)
+        dest_entry = Gtk.Entry()
+        dest_entry.set_placeholder_text("~/.config/algo")
 
-def icon_list() -> None:
-    icons = icon.installed_icons()
+        for row, (label, widget) in enumerate(
+            (("Nombre", name_entry), ("Origen", source_combo), ("Destino", dest_entry))
+        ):
+            grid.attach(Gtk.Label(label=label, xalign=0), 0, row, 1, 1)
+            grid.attach(widget, 1, row, 1, 1)
 
-    header("Installed icons")
-    print()
+        dialog.show_all()
+        accepted = dialog.run() == Gtk.ResponseType.OK
+        name = name_entry.get_text().strip()
+        source = (source_combo.get_active_text() or "").strip()
+        dest = dest_entry.get_text().strip()
+        dialog.destroy()
+        if not accepted or not (name and source and dest):
+            return
 
-    if not icons:
-        print(yellow("  No icons found."))
-        footer()
-        pause()
-        return
+        entries, error = self.manifest_entries()
+        if error:
+            self.link_status.set_text(error)
+            return
+        if any(entry["source"] == source for entry in entries):
+            self.link_status.set_text(f"{source} ya está en el manifest")
+            return
+        entries.append({"name": name, "source": source, "dest": dest})
+        self.save_manifest(entries)
+        self.refresh_links()
+        self.run_async([sys.executable, "-m", "bootstrap.install", "--only", name], self.refresh_links)
 
-    by_cat: dict[str, list[tuple[str, list[int]]]] = {}
-    for name, cats in sorted(icons.items()):
-        for cat, sizes in sorted(cats.items()):
-            by_cat.setdefault(cat, []).append((name, sizes))
+    # --- iconos ------------------------------------------------------------
 
-    for cat in sorted(by_cat):
-        items = by_cat[cat]
-        print(f"  {bold(cat)} ({len(items)} icons)")
-        for name, sizes in items:
-            counts: dict[int, int] = {}
-            for s in sizes:
-                counts[s] = counts.get(s, 0) + 1
-            human = ", ".join(
-                icon.size_label(s) if c == 1 else f"{icon.size_label(s)} (×{c})"
-                for s, c in sorted(counts.items())
+    def icons_page(self):
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        box.set_border_width(10)
+
+        panes = Gtk.Box(spacing=8)
+        panes.pack_start(self.repo_icons_widget(), True, True, 0)
+        panes.pack_start(self.installed_icons_widget(), True, True, 0)
+        box.pack_start(panes, True, True, 0)
+
+        buttons = Gtk.Box(spacing=6)
+        for label, handler in (
+            ("Recargar", lambda *_: self.refresh_icons()),
+            ("Instalar origen marcado", self.on_install_icon),
+            ("Quitar marcado", self.on_remove_icon),
+        ):
+            button = Gtk.Button(label=label)
+            button.connect("clicked", handler)
+            buttons.pack_start(button, False, False, 0)
+        box.pack_start(buttons, False, False, 0)
+
+        self.icon_status = Gtk.Label(xalign=0)
+        box.pack_start(self.icon_status, False, False, 0)
+        return box
+
+    def repo_icons_widget(self):
+        frame = Gtk.Frame(label="En el repo (desktop/icons)")
+        self.repo_icon_store = Gtk.ListStore(str, str, str, str)
+        view = Gtk.TreeView(model=self.repo_icon_store)
+        for index, title, width in ((0, "Nombre", 170), (1, "Categoría", 130), (2, "Tamaño", 100), (3, "Tipo", 60)):
+            renderer = Gtk.CellRendererText()
+            column = Gtk.TreeViewColumn(title, renderer, text=index)
+            column.set_min_width(width)
+            column.set_resizable(True)
+            view.append_column(column)
+        self.repo_icon_view = view
+        scroller = Gtk.ScrolledWindow()
+        scroller.add(view)
+        frame.add(scroller)
+        return frame
+
+    def installed_icons_widget(self):
+        frame = Gtk.Frame(label="Instalados (hicolor)")
+        self.installed_icon_store = Gtk.ListStore(str, str, str)
+        view = Gtk.TreeView(model=self.installed_icon_store)
+        for index, title, width in ((0, "Nombre", 170), (1, "Categoría", 130), (2, "Tamaños", 220)):
+            renderer = Gtk.CellRendererText()
+            column = Gtk.TreeViewColumn(title, renderer, text=index)
+            column.set_min_width(width)
+            column.set_resizable(True)
+            column.set_expand(index == 2)
+            view.append_column(column)
+        self.installed_icon_view = view
+        scroller = Gtk.ScrolledWindow()
+        scroller.add(view)
+        frame.add(scroller)
+        return frame
+
+    def refresh_icons(self):
+        self.repo_icon_store.clear()
+        self.installed_icon_store.clear()
+        try:
+            sources = icon.scan_repo_icons()
+        except Exception as error:  # noqa: BLE001
+            self.icon_status.set_text(f"error leyendo iconos: {error}")
+            return
+        for source in sources:
+            dims = icon.get_image_dimensions(source.path)
+            self.repo_icon_store.append(
+                [
+                    source.name,
+                    source.category,
+                    f"{dims[0]}x{dims[1]}" if dims else "?",
+                    source.path.suffix.lstrip("."),
+                ]
             )
-            print(f"    {green('•')} {bold(name)}  {dim(human)}")
-        print()
+        try:
+            installed = icon.installed_icons()
+        except Exception as error:  # noqa: BLE001
+            self.icon_status.set_text(f"error leyendo hicolor: {error}")
+            return
+        for name, categories in sorted(installed.items()):
+            for category, sizes in sorted(categories.items()):
+                labels = ", ".join(icon.size_label(size) for size in sorted(set(sizes)))
+                self.installed_icon_store.append([name, category, labels])
+        self.icon_status.set_text(f"{len(sources)} en el repo, {len(installed)} instalados")
 
-    footer()
-    pause()
+    def on_install_icon(self, _button=None):
+        model, path = self.repo_icon_view.get_selection().get_selected()
+        if path is None:
+            self.icon_status.set_text("marca un icono del repo primero")
+            return
+        name, category = model[path][0], model[path][1]
+        source = next((s for s in icon.scan_repo_icons() if s.name == name and s.category == category), None)
+        if source is None:
+            self.icon_status.set_text(f"no encontré {category}/{name}")
+            return
+        if category == "uncategorized":
+            self.icon_status.set_text("ese icono no tiene categoría; muévelo a desktop/icons/<categoría>/")
+            return
 
+        def job():
+            ok, error = icon.validate_source(source.path)
+            if not ok:
+                raise RuntimeError(error)
+            lines = []
+            if source.path.suffix.lower() == ".svg":
+                target = icon.category_dir(icon.SCALABLE_SIZE, category) / f"{name}.svg"
+                icon.copy_svg(source.path, target)
+                lines.append(f"scalable -> {target}")
+            else:
+                for size in icon.ICON_SIZES + icon.ICON_SIZES_2X:
+                    target = icon.category_dir(size, category) / f"{name}.png"
+                    icon.scale_icon(source.path, size, target)
+                    lines.append(f"{size}x{size} -> {target}")
+            return "\n".join(lines)
 
-def icon_remove() -> None:
-    icons = icon.installed_icons()
+        self.run_task(job, f"instalar icono {category}/{name}", self.refresh_icons)
 
-    header("Remove icon")
-    print()
+    def on_remove_icon(self, _button=None):
+        model, path = self.installed_icon_view.get_selection().get_selected()
+        if path is None:
+            self.icon_status.set_text("marca un icono instalado primero")
+            return
+        name = model[path][0]
+        dialog = Gtk.MessageDialog(
+            transient_for=self,
+            message_type=Gtk.MessageType.QUESTION,
+            buttons=Gtk.ButtonsType.OK_CANCEL,
+            text=f"¿Quitar todas las variantes de '{name}'?",
+        )
+        answer = dialog.run()
+        dialog.destroy()
+        if answer != Gtk.ResponseType.OK:
+            return
 
-    if not icons:
-        print(yellow("  No icons found."))
-        footer()
-        pause()
-        return
+        def job():
+            return f"{icon.remove_icon_files(name, icon.installed_icons())} archivos borrados"
 
-    all_names = sorted(icons.keys())
-    max_len = max(len(n) for n in all_names)
-    for i, name in enumerate(all_names, 1):
-        cats = icons[name]
-        cat_parts = []
-        for cat, sizes in sorted(cats.items()):
-            cat_parts.append(f"{cat}: {len(sizes)} sizes")
-        print(f"  {dim(f'{i:>3}')}  {bold(name.ljust(max_len))}  {dim(', '.join(cat_parts))}")
-    print()
+        self.run_task(job, f"quitar icono {name}", self.refresh_icons)
 
-    raw = ask("Icon name or number to remove (or 'q')")
-    if not raw or raw.lower() in ("q", "quit"):
-        return
+    # --- secretos ----------------------------------------------------------
 
-    try:
-        idx = int(raw) - 1
-        target_name = all_names[idx]
-    except (ValueError, IndexError):
-        target_name = raw.strip().lower()
+    def secrets_page(self):
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        box.set_border_width(10)
 
-    if target_name not in icons:
-        print(red(f"  ✗ icon '{target_name}' not found"))
-        pause()
-        return
+        self.secret_store = Gtk.ListStore(str, str, str, str, str)
+        view = Gtk.TreeView(model=self.secret_store)
+        self.secret_tree = view
+        for index, title, width, expand in (
+            (0, "Servicio", 160, False),
+            (1, "Cuenta", 170, False),
+            (2, "Etiqueta", 240, True),
+            (3, "Estado", 110, False),
+            (4, "Origen", 340, True),
+        ):
+            renderer = Gtk.CellRendererText()
+            renderer.set_property("ellipsize", Pango.EllipsizeMode.END)
+            column = Gtk.TreeViewColumn(title, renderer, text=index)
+            column.set_min_width(width)
+            column.set_resizable(True)
+            column.set_expand(expand)
+            view.append_column(column)
+        scroller = Gtk.ScrolledWindow()
+        scroller.add(view)
+        box.pack_start(scroller, True, True, 0)
 
-    total_files = sum(len(sizes) for sizes in icons[target_name].values())
-    print()
-    print(f"  {bold(target_name)}: {total_files} files across {len(icons[target_name])} categories")
-    if not confirm(f"Remove all files for '{target_name}'?", default_yes=False):
-        return
+        buttons = Gtk.Box(spacing=6)
+        for label, handler in (
+            ("Agregar / actualizar…", self.on_set_secret),
+            ("Sembrar faltantes", self.on_seed),
+            ("Borrar marcado", self.on_delete_secret),
+            ("Ver todos", self.on_list_secrets),
+        ):
+            button = Gtk.Button(label=label)
+            button.connect("clicked", handler)
+            buttons.pack_start(button, False, False, 0)
+        box.pack_start(buttons, False, False, 0)
 
-    clear()
-    header(f"Removing {bold(target_name)}")
-    print()
+        self.secret_status = Gtk.Label(xalign=0)
+        box.pack_start(self.secret_status, False, False, 0)
+        return box
 
-    removed = icon.remove_icon_files(target_name, icons)
+    def refresh_secrets(self):
+        self.secret_store.clear()
+        try:
+            saved = {(row[0], row[1]) for row in keyring_items()}
+        except Exception as error:  # noqa: BLE001
+            self.secret_status.set_text(f"no pude abrir el keyring: {error}")
+            saved = set()
+        missing = 0
+        for service, account, label, source in KNOWN:
+            found = (service, account) in saved
+            missing += 0 if found else 1
+            self.secret_store.append([service, account, label, "guardado" if found else "falta", source])
+        self.secret_status.set_text(f"{len(KNOWN)} esperados, {missing} sin guardar")
 
-    footer()
-    print()
-    print(f"  {green(f'✓ removed {removed}/{total_files} files')}")
-    pause()
+    def on_set_secret(self, _button=None):
+        dialog = Gtk.Dialog(title="Guardar secreto", transient_for=self)
+        dialog.add_buttons("Cancelar", Gtk.ResponseType.CANCEL, "Guardar", Gtk.ResponseType.OK)
+        grid = Gtk.Grid(column_spacing=10, row_spacing=8, margin=12)
+        dialog.get_content_area().add(grid)
 
+        service = Gtk.Entry(text="bws-mcp")
+        account = Gtk.Entry(text="access-token")
+        value = Gtk.Entry()
+        value.set_visibility(False)
+        value.set_input_purpose(Gtk.InputPurpose.PASSWORD)
+        value.set_placeholder_text("se guarda en el keyring, no en disco")
 
-def icon_menu() -> None:
-    while True:
-        header("Icon manager")
-        print()
-        print(f"  {dim('Repo source:')}  {icon.REPO_ICONS_DIR}/")
-        print(f"  {dim('Install to:')}    {icon.HICOLOR_BASE}/")
-        print(f"  {dim('Min size:')}      {icon.MIN_ICON_SIZE}x{icon.MIN_ICON_SIZE} (raster only; SVG exempt)")
-        print(f"  {dim('Sizes:')}         {', '.join(str(s) for s in icon.ICON_SIZES)}")
-        print(f"  {dim('HiDPI @2x:')}    {', '.join(str(s) for s in icon.ICON_SIZES_2X)}")
+        for row, (label, widget) in enumerate((("Servicio", service), ("Cuenta", account), ("Valor", value))):
+            grid.attach(Gtk.Label(label=label, xalign=0), 0, row, 1, 1)
+            grid.attach(widget, 1, row, 1, 1)
 
-        # show repo icon count
-        repo_count = len(icon.scan_repo_icons())
-        print()
-        if repo_count:
-            print(f"  {green(repo_count)} source icon(s) in {blue('desktop/icons/')}")
-        else:
-            print(yellow("  No icons in desktop/icons/ — add PNG/SVG files to desktop/icons/{category}/"))
-        print()
-        print(f"    {green('1')}  {dim('▸')}  Install icon (raster scaled, SVG copied)")
-        print(f"    {cyan('2')}  {dim('▸')}  List installed icons")
-        print(f"    {red('3')}  {dim('▸')}  Remove icon")
-        print(f"    {dim('q')}  {dim('▸')}  Back to main menu")
-        print()
+        dialog.show_all()
+        accepted = dialog.run() == Gtk.ResponseType.OK
+        data = (service.get_text().strip(), account.get_text().strip(), value.get_text())
+        dialog.destroy()
+        if not accepted or not all(data):
+            return
+        self.run_task(
+            lambda: f"guardado {data[0]}/{data[1]} ({len(data[2])} bytes)" if keyring_set(*data) is None else "",
+            f"set {data[0]}/{data[1]}",
+            self.refresh_secrets,
+        )
 
-        choice = input(f"  {green('▸')} ").strip().lower()
-        if choice in ("q", "quit", ""):
-            break
-        if choice == "1":
+    def on_seed(self, _button=None):
+        for service, account, label, source in KNOWN:
             try:
-                icon_install()
-            except Exception as error:
-                error_screen(error)
-        elif choice == "2":
-            try:
-                icon_list()
-            except Exception as error:
-                error_screen(error)
-        elif choice == "3":
-            try:
-                icon_remove()
-            except Exception as error:
-                error_screen(error)
-        else:
-            clear()
-            header("Error")
-            print(f"\n  {red('Unknown option.')}\n")
-            footer()
-            pause()
+                if keyring_get(service, account):
+                    continue
+            except Exception as error:  # noqa: BLE001
+                self.secret_status.set_text(str(error))
+                return
+            dialog = Gtk.Dialog(title=f"{service}/{account}", transient_for=self)
+            dialog.add_buttons("Saltar", Gtk.ResponseType.CANCEL, "Guardar", Gtk.ResponseType.OK)
+            box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8, margin=12)
+            dialog.get_content_area().add(box)
+            box.pack_start(Gtk.Label(label=source, xalign=0), False, False, 0)
+            value = Gtk.Entry()
+            value.set_visibility(False)
+            value.set_input_purpose(Gtk.InputPurpose.PASSWORD)
+            box.pack_start(value, False, False, 0)
+            dialog.show_all()
+            accepted = dialog.run() == Gtk.ResponseType.OK
+            text = value.get_text()
+            dialog.destroy()
+            if accepted and text:
+                self.run_task(
+                    lambda s=service, a=account, v=text: f"guardado {s}/{a}" if keyring_set(s, a, v) is None else "",
+                    f"set {service}/{account}",
+                )
+        self.refresh_secrets()
+
+    def on_delete_secret(self, _button=None):
+        model, path = self.secret_tree.get_selection().get_selected()
+        if path is None:
+            self.secret_status.set_text("marca una fila primero")
+            return
+        service, account = model[path][0], model[path][1]
+        dialog = Gtk.MessageDialog(
+            transient_for=self,
+            message_type=Gtk.MessageType.QUESTION,
+            buttons=Gtk.ButtonsType.OK_CANCEL,
+            text=f"¿Borrar {service}/{account} del keyring?",
+        )
+        answer = dialog.run()
+        dialog.destroy()
+        if answer != Gtk.ResponseType.OK:
+            return
+        self.run_task(
+            lambda: f"{keyring_delete(service, account)} borrado(s)",
+            f"rm {service}/{account}",
+            self.refresh_secrets,
+        )
+
+    def on_list_secrets(self, _button=None):
+        self.run_task(
+            lambda: "\n".join(f"{s:<22}{a:<20}{label}" for s, a, label in keyring_items()),
+            "list keyring",
+        )
+
+    # --- log ---------------------------------------------------------------
+
+    def log_page(self):
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        box.set_border_width(10)
+        self.view = Gtk.TextView()
+        self.view.set_monospace(True)
+        self.view.set_editable(False)
+        self.buffer = self.view.get_buffer()
+        scroller = Gtk.ScrolledWindow()
+        scroller.add(self.view)
+        box.pack_start(scroller, True, True, 0)
+        row = Gtk.Box(spacing=6)
+        self.mark = Gtk.Label(label="listo", xalign=0)
+        row.pack_start(self.mark, True, True, 0)
+        clear = Gtk.Button(label="Limpiar")
+        clear.connect("clicked", lambda *_: self.buffer.set_text(""))
+        row.pack_start(clear, False, False, 0)
+        box.pack_start(row, False, False, 0)
+        return box
 
 
-# --- safe pull -------------------------------------------------------------
-
-
-def pull_interactively(manifest_path: Path) -> None:
-    clear()
-    header("Safe pull")
-    print()
-    pull.main(["--manifest", str(manifest_path)])
-    footer()
-    pause()
-
-
-# --- main menu -------------------------------------------------------------
-
-
-def menu() -> int:
-    manifest_path = MANIFEST_PATH
-
-    while True:
-        header("Dotfiles manager")
-        print()
-        print(f"    {green('1')}  {dim('▸')}  Add new file / folder to manifest")
-        print(f"    {cyan('2')}  {dim('▸')}  Install (interactive, skip entries)")
-        print(f"    {blue('3')}  {dim('▸')}  Safe pull (protects linked files)")
-        print(f"    {magenta('4')}  {dim('▸')}  Show manifest")
-        print(f"    {yellow('5')}  {dim('▸')}  Icon manager")
-        print(f"    {dim('q')}  {dim('▸')}  Quit")
-        print()
-
-        choice = input(f"  {green('▸')} ").strip().lower()
-        if choice in ("q", "quit", ""):
-            clear()
-            break
-
-        if choice == "1":
-            try:
-                add_entry(manifest_path)
-            except (OSError, ValueError, json.JSONDecodeError) as error:
-                error_screen(error)
-        elif choice == "2":
-            try:
-                install_interactively(manifest_path)
-            except (OSError, ValueError, json.JSONDecodeError) as error:
-                error_screen(error)
-        elif choice == "3":
-            try:
-                pull_interactively(manifest_path)
-            except Exception as error:
-                error_screen(error)
-        elif choice == "4":
-            try:
-                show_manifest(manifest_path)
-            except (OSError, ValueError, json.JSONDecodeError) as error:
-                error_screen(error)
-        elif choice == "5":
-            try:
-                icon_menu()
-            except Exception as error:
-                error_screen(error)
-        else:
-            clear()
-            header("Error")
-            print(f"\n  {red('Unknown option.')}\n")
-            footer()
-            pause()
-
+def main() -> int:
+    if not MANIFEST.exists():
+        sys.exit(f"no encontré {MANIFEST}")
+    if not os.environ.get("DISPLAY") and not os.environ.get("WAYLAND_DISPLAY"):
+        sys.exit("esto necesita sesión gráfica")
+    window = Tools()
+    window.connect("destroy", Gtk.main_quit)
+    window.show_all()
+    Gtk.main()
     return 0
 
 
 if __name__ == "__main__":
-    raise SystemExit(menu())
+    sys.exit(main())

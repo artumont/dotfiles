@@ -18,3 +18,21 @@ Same thing from the shell:
 - The first run sets `core.hooksPath` to `bootstrap/hooks`. Its `post-merge`
   hook restores links that a plain `git pull` already broke, using the
   pre-pull commit.
+
+## GUI
+
+`python3 manager.py` abre la interfaz con cuatro pestañas:
+
+- Vínculos: estado de cada entrada del manifest, instalar marcadas, dry run, safe pull, agregar entrada y ver el JSON.
+- Iconos: fuentes en `desktop/icons/` contra lo instalado en hicolor, con instalar y quitar.
+- Secretos: items del keyring de GNOME (agregar, actualizar, borrar, ver todos).
+- Log: salida de cada acción.
+
+Va con el python del sistema, no con el venv de uv, porque PyGObject viene del
+distro (`python3-gi`). Lo único que hace falta instalar aparte es secretstorage:
+
+    python3 -m pip install --user --break-system-packages secretstorage
+
+El keyring no viaja en el repo: solo los nombres que aparecen en `KNOWN` dentro
+de `manager.py`. En una máquina nueva abre la pestaña Secretos y usa "Sembrar
+faltantes"; cada valor se pega en un campo oculto.
