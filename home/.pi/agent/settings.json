@@ -4,6 +4,7 @@
   "defaultProvider": "opencode-go",
   "defaultModel": "deepseek-v4.1-flash",
   "defaultThinkingLevel": "high",
+  "defaultTools": ["+codemode"],
   "packages": [
     "npm:pi-mcp-adapter",
     "npm:pi-caveman",
@@ -32,8 +33,8 @@
     "{\"source\":\"npm:pi-mcp-adapter\",\"scope\":\"user\"}": "7.0.1",
     "{\"source\":\"npm:pi-agentsmd\",\"scope\":\"user\"}": "0.2.1",
     "{\"source\":\"npm:pi-web-access\",\"scope\":\"user\"}": "0.48.0",
-    "{\"source\":\"npm:pi-lens\",\"scope\":\"user\"}": "4.5.0",
-    "{\"source\":\"npm:pi-subagents\",\"scope\":\"user\"}": "0.88.1"
+    "{\"source\":\"npm:pi-lens\",\"scope\":\"user\"}": "4.5.1",
+    "{\"source\":\"npm:pi-subagents\",\"scope\":\"user\"}": "0.89.0"
   },
   "enabledModels": [
     "opencode-go/deepseek-v4.1-flash",
