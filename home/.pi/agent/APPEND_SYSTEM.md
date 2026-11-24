@@ -13,6 +13,14 @@ stop and ask. If approval is not given, leave the change staged or uncommitted.
 
 `git push` requires its own separate explicit approval, always.
 
+# Commits: always in English
+
+Commit messages are always written in English, in every repository, even when
+the conversation or the project docs are in Spanish. Conventional Commits,
+imperative mood, subject at 50 characters or less. The body may explain context
+in English only; if a Spanish term is essential (a module name, a business
+concept), keep the noun but write the sentence in English.
+
 # Writing: no long dashes
 
 **Never use em dashes or en dashes.** Not in replies, not in code comments, not in
